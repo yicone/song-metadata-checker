@@ -1,0 +1,33 @@
+{
+  "node_type": "http-request",
+  "title": "QQ 音乐搜索歌曲",
+  "description": "在 QQ 音乐上搜索匹配的歌曲",
+  "config": {
+    "method": "GET",
+    "url": "{{#env.QQ_MUSIC_API_HOST#}}/search",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "params": {
+      "key": "{{song_title}} {{artist_name}}",
+      "pageSize": 10,
+      "pageNo": 1
+    },
+    "timeout": 10000,
+    "retry": {
+      "enabled": true,
+      "max_retries": 2,
+      "retry_interval": 1000
+    }
+  },
+  "outputs": [
+    {
+      "variable": "qqmusic_search_results",
+      "type": "string"
+    }
+  ],
+  "error_handling": {
+    "fail_branch": true,
+    "on_error": "continue"
+  }
+}

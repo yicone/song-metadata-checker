@@ -131,6 +131,7 @@ docker-compose up -d
 在 Dify 界面中测试工作流：
 
 **输入：**
+
 - `song_url`: `https://music.163.com#/song?id=2758218600`
 - `credits_image_url`: （可选）制作人员图片 URL
 
@@ -192,6 +193,7 @@ python scripts/test_workflow.py --url "https://music.163.com#/song?id=2758218600
 **问题：** `curl http://localhost:3000` 失败
 
 **解决方案：**
+
 ```bash
 # 检查容器状态
 docker ps | grep netease
@@ -209,6 +211,7 @@ docker-compose restart
 **问题：** `❌ Spotify OAuth 认证失败: 401`
 
 **解决方案：**
+
 1. 确认 Client ID 和 Client Secret 正确
 2. 检查 Spotify 应用状态（是否被暂停）
 3. 验证 Base64 编码是否正确
@@ -218,6 +221,7 @@ docker-compose restart
 **问题：** `❌ Gemini API 测试失败: timeout`
 
 **解决方案：**
+
 1. 检查网络连接
 2. 确认 API 密钥有效
 3. 增加超时时间（在 HTTP 节点配置中）
@@ -227,6 +231,7 @@ docker-compose restart
 **问题：** 工作流 YAML 导入错误
 
 **解决方案：**
+
 1. 确认 Dify 版本兼容性（推荐 0.8.0+）
 2. 检查 YAML 格式是否正确
 3. 尝试手动创建节点并配置

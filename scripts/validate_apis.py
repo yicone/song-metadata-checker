@@ -42,16 +42,43 @@ def test_netease_api():
         return False
 
 
+def test_qqmusic_api():
+    """测试 QQ 音乐 API"""
+    print("\n🎵 测试 QQ 音乐 API...")
+    host = os.getenv('QQ_MUSIC_API_HOST', 'http://localhost:3001')
+    
+    try:
+        # 测试健康检查
+        response = requests.get(f"{host}/", timeout=5)
+        if response.status_code == 200:
+            print("✅ QQ 音乐 API 连接成功")
+            
+            # 测试搜索接口
+            response = requests.get(f"{host}/search?key=周杰伦&pageSize=1", timeout=10)
+            if response.status_code == 200:
+                print("✅ QQ 音乐搜索接口测试成功")
+                return True
+            else:
+                print(f"❌ QQ 音乐搜索接口测试失败: {response.status_code}")
+                return False
+        else:
+            print(f"❌ QQ 音乐 API 连接失败: {response.status_code}")
+            return False
+    except Exception as e:
+        print(f"❌ QQ 音乐 API 测试失败: {str(e)}")
+        return False
+
+
 def test_spotify_api():
-    """测试 Spotify API"""
-    print("\n🎧 测试 Spotify API...")
+    """测试 Spotify API（可选）"""
+    print("\n🎧 测试 Spotify API（可选）...")
     client_id = os.getenv('SPOTIFY_CLIENT_ID')
     client_secret = os.getenv('SPOTIFY_CLIENT_SECRET')
     auth_url = os.getenv('SPOTIFY_AUTH_URL', 'https://accounts.spotify.com/api/token')
     
     if not client_id or not client_secret:
-        print("❌ 未配置 Spotify 凭证")
-        return False
+        print("⏭️  未配置 Spotify 凭证（已跳过）")
+        return True  # 返回 True 因为这是可选的
     
     try:
         # 获取访问令牌
@@ -143,9 +170,10 @@ def main():
     print("=" * 60)
     
     results = {
-        '网易云音乐 API': test_netease_api(),
-        'Spotify API': test_spotify_api(),
-        'Gemini API': test_gemini_api()
+        '网易云音乐 API (数据源)': test_netease_api(),
+        'QQ 音乐 API (核验源)': test_qqmusic_api(),
+        'Gemini API (OCR)': test_gemini_api(),
+        'Spotify API (可选)': test_spotify_api()
     }
     
     print("\n" + "=" * 60)

@@ -1,0 +1,31 @@
+{
+  "node_type": "http-request",
+  "title": "QQ 音乐获取歌曲详情",
+  "description": "获取 QQ 音乐歌曲的完整元数据",
+  "config": {
+    "method": "GET",
+    "url": "{{#env.QQ_MUSIC_API_HOST#}}/song",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "params": {
+      "songmid": "{{qqmusic_song_id}}"
+    },
+    "timeout": 10000,
+    "retry": {
+      "enabled": true,
+      "max_retries": 2,
+      "retry_interval": 1000
+    }
+  },
+  "outputs": [
+    {
+      "variable": "qqmusic_song_data",
+      "type": "string"
+    }
+  ],
+  "error_handling": {
+    "fail_branch": true,
+    "on_error": "continue"
+  }
+}

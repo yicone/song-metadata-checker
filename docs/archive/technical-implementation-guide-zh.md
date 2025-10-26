@@ -1,5 +1,4 @@
 
-
 # **基于 Dify 构建的自动化音乐元数据上架与核验工作流技术实现方案**
 
 ## **I. 自动化歌曲上架工作流的架构蓝图**
@@ -31,8 +30,8 @@
 | :---- | :---- | :---- | :---- | :---- | :---- |
 | 网易云音乐 (Netease) | http://\<your-api-host\>:3000 | /song/detail, /lyric | GET | 无 | ids, id |
 | QQ 音乐 (Unofficial) | (根据具体实现而定) | /search, /song | GET | 无 | keyword, songmid |
-| Spotify | https://api.spotify.com/v1 | /search, /tracks/{id} | GET | OAuth 2.0 (客户端凭证) | q, type, id |
-| Google Gemini API | https://generativelanguage.googleapis.com/v1beta | /models/gemini-2.5-flash:generateContent | POST | API 密钥 (API Key) | contents (含图片 URL/数据) |
+| Spotify | <https://api.spotify.com/v1> | /search, /tracks/{id} | GET | OAuth 2.0 (客户端凭证) | q, type, id |
+| Google Gemini API | <https://generativelanguage.googleapis.com/v1beta> | /models/gemini-2.5-flash:generateContent | POST | API 密钥 (API Key) | contents (含图片 URL/数据) |
 
 该架构设计揭示了一个核心挑战：系统高度依赖一个由社区维护、通过逆向工程实现的脆弱 API 生态系统。这不仅仅是一个技术细节，而是一个显著的业务风险。网易云音乐和 QQ 音乐的 API 都是通过模拟官方客户端行为来实现的，如伪造请求头等 10。这意味着一旦官方平台更新其内部接口或加强安全措施，这些非官方 API 随时可能失效，且不会有任何预先通知。因此，基于此蓝图构建的生产级系统，其长期稳定性和可用性无法得到保障。这要求在设计层面就必须将健壮的错误处理机制视为核心功能，而非附加选项。Dify 工作流中的错误处理分支（Fail Branch）19 变得至关重要，它能够确保在某个数据源失效时，系统能够优雅地降级——例如，继续使用其他可用的数据源进行核验，并明确标记出故障部分，而不是导致整个工作流中断。此外，必须建立一套持续的监控和告警机制，以便在 API 失效时能够迅速响应和修复。
 
@@ -42,7 +41,7 @@
 
 ### **2.1. 配置 开始 节点**
 
-整个工作流由一个 开始 (Start) 节点启动。该节点是用户与系统交互的入口。在此，我们将配置一个名为 song\_url 的字符串类型输入变量。这个变量将用于接收用户提交的网易云音乐歌曲页面的完整 URL，例如 https://music.163.com\#/song?id=2758218600 3。
+整个工作流由一个 开始 (Start) 节点启动。该节点是用户与系统交互的入口。在此，我们将配置一个名为 song\_url 的字符串类型输入变量。这个变量将用于接收用户提交的网易云音乐歌曲页面的完整 URL，例如 <https://music.163.com\#/song?id=2758218600> 3。
 
 ### **2.2. 使用 代码执行 节点解析歌曲 ID**
 
@@ -72,7 +71,7 @@
 
 ### **3.2. 配置多模态 LLM 调用 (HTTP 请求 节点)**
 
-我们将配置一个 HTTP 请求 节点，使其向 Google Gemini API 的 generateContent 端点发起一个 POST 请求。端点地址为：https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent 17。
+我们将配置一个 HTTP 请求 节点，使其向 Google Gemini API 的 generateContent 端点发起一个 POST 请求。端点地址为：<https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent> 17。
 
 * **认证**: 请求的 HTTP 头部（Header）中必须包含 x-goog-api-key 字段，其值为您的 Google Gemini API 密钥。该密钥应作为安全变量存储和引用。  
 * **请求体 (Request Body)**: 请求体是精心构造的 JSON 对象，其核心是 contents 数组。该数组将包含图片数据和一段明确的文本提示（Prompt），以指导模型执行 OCR 并返回结构化数据 22。
@@ -125,9 +124,9 @@ Gemini API 成功执行后，其响应体中将包含模型生成的文本，根
 
 Spotify 提供了稳定且文档齐全的官方 Web API，是进行高质量核验的理想选择。
 
-* **认证**: 与 Spotify API 的交互需要 OAuth 2.0 认证。第一步是实现客户端凭证授权流程（Client Credentials Flow）。这需要配置一个 HTTP 请求 节点，向 https://accounts.spotify.com/api/token 发送一个 POST 请求，请求体中包含 Base64 编码的客户端 ID 和密钥 26。成功后返回的 access\_token 将被存储为一个变量，用于后续所有对 Spotify API 的请求。  
-* **搜索**: 配置一个 HTTP 请求 节点，向 https://api.spotify.com/v1/search 端点发起 GET 请求。查询参数 q 将被构造成 track:{{song\_title}} artist:{{artist\_name}} 的形式，同时在请求头中加入 Authorization: Bearer {{spotify\_access\_token}} 27。  
-* **获取**: 与处理 QQ 音乐类似，一个 代码执行 节点将解析搜索结果，找出最佳匹配项并提取其 track ID。随后，最后一个 HTTP 请求 节点将调用 https://api.spotify.com/v1/tracks/{{spotify\_track\_id}} 来获取该曲目的完整元数据 15。结果存储在 spotify\_data 变量中。
+* **认证**: 与 Spotify API 的交互需要 OAuth 2.0 认证。第一步是实现客户端凭证授权流程（Client Credentials Flow）。这需要配置一个 HTTP 请求 节点，向 <https://accounts.spotify.com/api/token> 发送一个 POST 请求，请求体中包含 Base64 编码的客户端 ID 和密钥 26。成功后返回的 access\_token 将被存储为一个变量，用于后续所有对 Spotify API 的请求。  
+* **搜索**: 配置一个 HTTP 请求 节点，向 <https://api.spotify.com/v1/search> 端点发起 GET 请求。查询参数 q 将被构造成 track:{{song\_title}} artist:{{artist\_name}} 的形式，同时在请求头中加入 Authorization: Bearer {{spotify\_access\_token}} 27。  
+* **获取**: 与处理 QQ 音乐类似，一个 代码执行 节点将解析搜索结果，找出最佳匹配项并提取其 track ID。随后，最后一个 HTTP 请求 节点将调用 <https://api.spotify.com/v1/tracks/{{spotify\_track\_id}}> 来获取该曲目的完整元数据 15。结果存储在 spotify\_data 变量中。
 
 ### **4.4. 使用 Gemini 2.5 Flash 进行封面图的多模态核验**
 
