@@ -1,16 +1,20 @@
-# Python dependencies for scripts and testing
-
-# HTTP requests
-requests>=2.31.0
-
-# Environment variables
-python-dotenv>=1.0.0
-
-# Testing (optional)
-pytest>=7.4.0
-pytest-cov>=4.1.0
-
-# Code quality (optional)
-black>=23.0.0
-flake8>=6.0.0
-mypy>=1.5.0
+# poetry export --without-hashes --with=dev  --format=requirements.txt > requirements.txt
+certifi==2025.10.5
+charset-normalizer==3.4.4
+colorama==0.4.6 and sys_platform == "win32"
+idna==3.11
+iniconfig==2.3.0
+mypy-extensions==1.1.0
+mypy==1.18.2
+packaging==25.0
+pathspec==0.12.1
+pluggy==1.6.0
+pygments==2.19.2
+pytest-asyncio==0.23.8
+pytest-mock==3.15.1
+pytest==8.4.2
+python-dotenv==1.2.0
+requests==2.32.5
+ruff==0.8.6
+typing-extensions==4.15.0
+urllib3==2.5.0
