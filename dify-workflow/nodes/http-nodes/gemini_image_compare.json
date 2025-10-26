@@ -1,0 +1,54 @@
+{
+  "node_type": "http-request",
+  "title": "Gemini 封面图比对",
+  "description": "使用 Gemini 2.5 Flash 比对两张专辑封面图",
+  "config": {
+    "method": "POST",
+    "url": "{{#env.GEMINI_API_BASE_URL#}}/models/gemini-2.5-flash:generateContent",
+    "headers": {
+      "x-goog-api-key": "{{#env.GEMINI_API_KEY#}}",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "contents": [
+        {
+          "parts": [
+            {
+              "text": "这两张图片是同一张专辑的封面吗？如果它们是相同的，请只回答单个词 '相同'；如果不同，请只回答 '不相同'。"
+            },
+            {
+              "url_context": {
+                "urls": [
+                  "{{netease_cover_url}}",
+                  "{{spotify_cover_url}}"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "generationConfig": {
+        "temperature": 0.1,
+        "topK": 1,
+        "topP": 1,
+        "maxOutputTokens": 10
+      }
+    },
+    "timeout": 30000,
+    "retry": {
+      "enabled": true,
+      "max_retries": 2,
+      "retry_interval": 1000
+    }
+  },
+  "outputs": [
+    {
+      "variable": "cover_match_result",
+      "type": "string"
+    }
+  ],
+  "error_handling": {
+    "fail_branch": true,
+    "on_error": "continue"
+  }
+}

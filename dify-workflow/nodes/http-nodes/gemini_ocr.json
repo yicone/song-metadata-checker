@@ -1,0 +1,52 @@
+{
+  "node_type": "http-request",
+  "title": "Gemini OCR - 提取制作人员信息",
+  "description": "使用 Gemini 2.5 Flash 从图片中提取制作人员名单",
+  "config": {
+    "method": "POST",
+    "url": "{{#env.GEMINI_API_BASE_URL#}}/models/gemini-2.5-flash:generateContent",
+    "headers": {
+      "x-goog-api-key": "{{#env.GEMINI_API_KEY#}}",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "contents": [
+        {
+          "parts": [
+            {
+              "text": "请从这张图片中提取音乐制作人员名单信息。图片中包含了作词、作曲、编曲、制作人等信息。请以 JSON 格式返回，只返回 JSON 对象，不要包含任何其他文字。JSON 格式如下：\n{\n  \"作词\": [\"人名1\", \"人名2\"],\n  \"作曲\": [\"人名1\"],\n  \"编曲\": [\"人名1\"],\n  \"制作人\": [\"人名1\"],\n  \"混音\": [\"人名1\"],\n  \"母带\": [\"人名1\"]\n}\n如果某个字段不存在，请省略该字段。"
+            },
+            {
+              "inline_data": {
+                "mime_type": "image/jpeg",
+                "data": "{{credits_image_base64}}"
+              }
+            }
+          ]
+        }
+      ],
+      "generationConfig": {
+        "temperature": 0.1,
+        "topK": 32,
+        "topP": 1,
+        "maxOutputTokens": 2048
+      }
+    },
+    "timeout": 30000,
+    "retry": {
+      "enabled": true,
+      "max_retries": 2,
+      "retry_interval": 1000
+    }
+  },
+  "outputs": [
+    {
+      "variable": "gemini_ocr_response",
+      "type": "string"
+    }
+  ],
+  "error_handling": {
+    "fail_branch": true,
+    "on_error": "continue"
+  }
+}

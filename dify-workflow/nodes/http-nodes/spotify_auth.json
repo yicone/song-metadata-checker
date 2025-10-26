@@ -1,0 +1,32 @@
+{
+  "node_type": "http-request",
+  "title": "Spotify OAuth 认证",
+  "description": "获取 Spotify API 访问令牌",
+  "config": {
+    "method": "POST",
+    "url": "{{#env.SPOTIFY_AUTH_URL#}}",
+    "headers": {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Authorization": "Basic {{spotify_auth_base64}}"
+    },
+    "body": "grant_type=client_credentials",
+    "timeout": 10000,
+    "retry": {
+      "enabled": true,
+      "max_retries": 3,
+      "retry_interval": 1000
+    }
+  },
+  "outputs": [
+    {
+      "variable": "spotify_auth_response",
+      "type": "string",
+      "extract_path": "access_token"
+    }
+  ],
+  "error_handling": {
+    "fail_branch": true,
+    "on_error": "stop"
+  },
+  "notes": "需要预先将 SPOTIFY_CLIENT_ID:SPOTIFY_CLIENT_SECRET 进行 Base64 编码并存储在 spotify_auth_base64 变量中"
+}

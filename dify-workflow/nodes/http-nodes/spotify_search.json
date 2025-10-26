@@ -1,0 +1,35 @@
+{
+  "node_type": "http-request",
+  "title": "Spotify 搜索歌曲",
+  "description": "在 Spotify 上搜索匹配的歌曲",
+  "config": {
+    "method": "GET",
+    "url": "{{#env.SPOTIFY_API_BASE_URL#}}/search",
+    "headers": {
+      "Authorization": "Bearer {{spotify_access_token}}",
+      "Content-Type": "application/json"
+    },
+    "params": {
+      "q": "track:{{song_title}} artist:{{artist_name}}",
+      "type": "track",
+      "limit": 10,
+      "market": "US"
+    },
+    "timeout": 10000,
+    "retry": {
+      "enabled": true,
+      "max_retries": 2,
+      "retry_interval": 1000
+    }
+  },
+  "outputs": [
+    {
+      "variable": "spotify_search_results",
+      "type": "string"
+    }
+  ],
+  "error_handling": {
+    "fail_branch": true,
+    "on_error": "continue"
+  }
+}

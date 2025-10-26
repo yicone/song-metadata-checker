@@ -1,0 +1,277 @@
+name: "音乐元数据核验工作流"
+type: "workflow"
+description: "自动化音乐歌曲上架与核验工作流 - 从网易云音乐提取元数据并通过多源交叉验证"
+version: "1.0.0"
+
+# 工作流输入变量
+inputs:
+  - name: "song_url"
+    type: "string"
+    required: true
+    description: "网易云音乐歌曲页面 URL"
+  - name: "credits_image_url"
+    type: "string"
+    required: false
+    description: "制作人员名单图片 URL（可选）"
+
+# 工作流节点定义
+nodes:
+  # ========== 阶段一：数据提取 ==========
+  
+  - id: "start"
+    type: "start"
+    title: "开始"
+    config:
+      variables:
+        - song_url
+        - credits_image_url
+
+  - id: "parse_url"
+    type: "code"
+    title: "解析 URL"
+    description: "从 URL 中提取歌曲 ID"
+    config:
+      code_language: "python3"
+      code_file: "nodes/code-nodes/parse_url.py"
+      inputs:
+        - variable: "start.song_url"
+          name: "song_url"
+      outputs:
+        - name: "song_id"
+          type: "string"
+        - name: "success"
+          type: "boolean"
+    dependencies: ["start"]
+
+  - id: "netease_song_detail"
+    type: "http-request"
+    title: "获取网易云歌曲详情"
+    config_file: "nodes/http-nodes/netease_song_detail.json"
+    inputs:
+      - variable: "parse_url.song_id"
+        name: "song_id"
+    dependencies: ["parse_url"]
+
+  - id: "netease_lyric"
+    type: "http-request"
+    title: "获取网易云歌词"
+    config_file: "nodes/http-nodes/netease_lyric.json"
+    inputs:
+      - variable: "parse_url.song_id"
+        name: "song_id"
+    dependencies: ["parse_url"]
+
+  - id: "initial_data_structuring"
+    type: "code"
+    title: "初始数据结构化"
+    description: "构建基础元数据对象"
+    config:
+      code_language: "python3"
+      code_file: "nodes/code-nodes/initial_data_structuring.py"
+      inputs:
+        - variable: "netease_song_detail.netease_song_details"
+          name: "netease_song_details"
+        - variable: "netease_lyric.netease_lyrics_data"
+          name: "netease_lyrics_data"
+      outputs:
+        - name: "metadata"
+          type: "object"
+        - name: "success"
+          type: "boolean"
+    dependencies: ["netease_song_detail", "netease_lyric"]
+
+  # ========== 阶段二：OCR 提取 ==========
+
+  - id: "gemini_ocr"
+    type: "http-request"
+    title: "Gemini OCR 提取制作人员"
+    config_file: "nodes/http-nodes/gemini_ocr.json"
+    inputs:
+      - variable: "start.credits_image_url"
+        name: "credits_image_url"
+    dependencies: ["initial_data_structuring"]
+    condition:
+      type: "if"
+      expression: "{{start.credits_image_url}} != ''"
+
+  - id: "parse_ocr_json"
+    type: "code"
+    title: "解析 OCR 结果"
+    description: "解析 Gemini 返回的 JSON 并合并到元数据"
+    config:
+      code_language: "python3"
+      code_file: "nodes/code-nodes/parse_ocr_json.py"
+      inputs:
+        - variable: "gemini_ocr.gemini_ocr_response"
+          name: "gemini_response"
+        - variable: "initial_data_structuring.metadata"
+          name: "metadata"
+      outputs:
+        - name: "metadata"
+          type: "object"
+        - name: "success"
+          type: "boolean"
+    dependencies: ["gemini_ocr"]
+
+  # ========== 阶段三：多源核验 ==========
+
+  # Spotify 认证与搜索
+  - id: "spotify_auth"
+    type: "http-request"
+    title: "Spotify OAuth 认证"
+    config_file: "nodes/http-nodes/spotify_auth.json"
+    dependencies: ["parse_ocr_json"]
+
+  - id: "spotify_search"
+    type: "http-request"
+    title: "Spotify 搜索"
+    config_file: "nodes/http-nodes/spotify_search.json"
+    inputs:
+      - variable: "spotify_auth.spotify_access_token"
+        name: "spotify_access_token"
+      - variable: "initial_data_structuring.metadata.song_title"
+        name: "song_title"
+      - variable: "initial_data_structuring.metadata.artists[0]"
+        name: "artist_name"
+    dependencies: ["spotify_auth"]
+
+  - id: "find_spotify_match"
+    type: "code"
+    title: "找到 Spotify 匹配"
+    description: "从搜索结果中找到最佳匹配"
+    config:
+      code_language: "python3"
+      code_file: "nodes/code-nodes/find_match.py"
+      inputs:
+        - variable: "spotify_search.spotify_search_results"
+          name: "search_results"
+        - variable: "initial_data_structuring.metadata.song_title"
+          name: "target_title"
+        - variable: "initial_data_structuring.metadata.artists"
+          name: "target_artists"
+        - value: "spotify"
+          name: "platform"
+      outputs:
+        - name: "match_id"
+          type: "string"
+        - name: "match_found"
+          type: "boolean"
+    dependencies: ["spotify_search"]
+
+  - id: "spotify_track_details"
+    type: "http-request"
+    title: "获取 Spotify 曲目详情"
+    config_file: "nodes/http-nodes/spotify_track_details.json"
+    inputs:
+      - variable: "spotify_auth.spotify_access_token"
+        name: "spotify_access_token"
+      - variable: "find_spotify_match.match_id"
+        name: "spotify_track_id"
+    dependencies: ["find_spotify_match"]
+    condition:
+      type: "if"
+      expression: "{{find_spotify_match.match_found}} == true"
+
+  # 封面图比对
+  - id: "gemini_image_compare"
+    type: "http-request"
+    title: "Gemini 封面图比对"
+    config_file: "nodes/http-nodes/gemini_image_compare.json"
+    inputs:
+      - variable: "initial_data_structuring.metadata.cover_art_url"
+        name: "netease_cover_url"
+      - variable: "spotify_track_details.spotify_track_data.album.images[0].url"
+        name: "spotify_cover_url"
+    dependencies: ["spotify_track_details"]
+
+  # ========== 阶段四：数据整合 ==========
+
+  - id: "normalize_data"
+    type: "code"
+    title: "数据规范化"
+    description: "规范化来自不同平台的数据"
+    config:
+      code_language: "python3"
+      code_file: "nodes/code-nodes/normalize_data.py"
+      inputs:
+        - variable: "parse_ocr_json.metadata"
+          name: "netease_data"
+        - variable: "spotify_track_details.spotify_track_data"
+          name: "spotify_data"
+        - value: ""
+          name: "qqmusic_data"
+      outputs:
+        - name: "normalized_data"
+          type: "object"
+    dependencies: ["spotify_track_details", "gemini_image_compare"]
+
+  - id: "consolidate"
+    type: "code"
+    title: "数据整合与核验"
+    description: "比对多源数据并生成最终报告"
+    config:
+      code_language: "python3"
+      code_file: "nodes/code-nodes/consolidate.py"
+      inputs:
+        - variable: "normalize_data.normalized_data"
+          name: "normalized_data"
+        - variable: "gemini_image_compare.cover_match_result"
+          name: "cover_match_result"
+      outputs:
+        - name: "final_report"
+          type: "object"
+        - name: "success"
+          type: "boolean"
+    dependencies: ["normalize_data"]
+
+  - id: "end"
+    type: "answer"
+    title: "输出结果"
+    config:
+      answer: "{{consolidate.final_report}}"
+    dependencies: ["consolidate"]
+
+# 错误处理配置
+error_handling:
+  default_strategy: "continue"
+  fail_branches:
+    - node_id: "netease_song_detail"
+      action: "stop"
+      message: "无法获取网易云音乐数据，工作流终止"
+    - node_id: "gemini_ocr"
+      action: "continue"
+      message: "OCR 提取失败，继续使用基础数据"
+    - node_id: "spotify_search"
+      action: "continue"
+      message: "Spotify 搜索失败，跳过 Spotify 核验"
+    - node_id: "gemini_image_compare"
+      action: "continue"
+      message: "封面图比对失败，跳过封面核验"
+
+# 环境变量配置
+environment:
+  required_variables:
+    - GEMINI_API_KEY
+    - GEMINI_API_BASE_URL
+    - SPOTIFY_CLIENT_ID
+    - SPOTIFY_CLIENT_SECRET
+    - SPOTIFY_AUTH_URL
+    - SPOTIFY_API_BASE_URL
+    - NETEASE_API_HOST
+
+# 性能配置
+performance:
+  timeout: 120000  # 总超时时间 120 秒
+  max_retries: 3
+  parallel_execution: false  # 当前版本顺序执行，未来可优化为并行
+
+# 元数据
+metadata:
+  author: "Music Metadata Checker Team"
+  created_at: "2025-01-26"
+  tags:
+    - "music"
+    - "metadata"
+    - "verification"
+    - "dify"
+    - "workflow"
