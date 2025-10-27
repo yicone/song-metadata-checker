@@ -726,7 +726,7 @@ def main(netease_cover_url: str, qqmusic_cover_url: str) -> dict:
 
 **输出变量**:
 
-- `body.candidates[0].content.parts[0].text` → 保存为 `cover_match_result`
+- `body` → 原始响应（需要解析）
 
 **⚠️ 关键修复**:
 
@@ -750,6 +750,114 @@ GEMINI_API_BASE_URL=https://generativelanguage.googleapis.com
 GEMINI_API_KEY=your_api_key_here
 ```
 
+**⚠️ API Key 传递方式**:
+
+使用 Header 方式传递 API Key（推荐）：
+
+- Header: `x-goog-api-key: {{env.GEMINI_API_KEY}}`
+- URL: `{{env.GEMINI_API_BASE_URL}}/v1beta/models/gemini-2.5-flash-lite:generateContent`
+
+---
+
+### 步骤 14.1: 添加代码节点 - 解析 Gemini 响应 (可选)
+
+**节点类型**: Code  
+**节点名称**: `parse_gemini_response`  
+**描述**: 解析 Gemini 返回的封面图比较结果
+
+**⚠️ 说明**: 此节点为可选，仅在添加了 `gemini_cover_comparison` 节点时需要
+
+**输入变量**:
+
+- `gemini_response` → 来自 `gemini_cover_comparison.body`
+
+**代码**:
+
+```python
+import json
+import re
+
+def main(gemini_response: str) -> dict:
+    """
+    解析 Gemini Vision API 响应
+    提取封面图比较的 JSON 结果
+    """
+    try:
+        # 1. 解析 HTTP 响应
+        if isinstance(gemini_response, str):
+            response_data = json.loads(gemini_response)
+        else:
+            response_data = gemini_response
+        
+        # 2. 提取 text 字段
+        text = response_data.get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', '')
+        
+        # 3. 提取 JSON（去除 markdown 代码块标记）
+        # Gemini 可能返回: ```json\n{...}\n```
+        json_match = re.search(r'```json\s*\n(.*?)\n```', text, re.DOTALL)
+        if json_match:
+            json_str = json_match.group(1)
+        else:
+            # 尝试直接解析
+            json_str = text
+        
+        # 4. 解析 JSON
+        comparison_result = json.loads(json_str)
+        
+        # 5. 提取关键字段
+        is_same = comparison_result.get('is_same', False)
+        confidence = comparison_result.get('confidence', 0.0)
+        differences = comparison_result.get('differences', [])
+        notes = comparison_result.get('notes', '')
+        
+        return {
+            "is_same": is_same,
+            "confidence": confidence,
+            "differences": differences,
+            "notes": notes,
+            "raw_json": json_str,
+            "success": True,
+            "error": ""
+        }
+    
+    except Exception as e:
+        return {
+            "is_same": False,
+            "confidence": 0.0,
+            "differences": [],
+            "notes": "",
+            "raw_json": "",
+            "success": False,
+            "error": str(e)
+        }
+```
+
+**输出变量**:
+
+- `is_same` (Boolean) - 封面图是否相同
+- `confidence` (Number) - 置信度 (0.0-1.0)
+- `differences` (Array) - 差异列表
+- `notes` (String) - 额外说明
+- `raw_json` (String) - 原始 JSON 字符串
+- `success` (Boolean) - 解析状态
+- `error` (String) - 错误信息
+
+**示例输出**:
+
+```json
+{
+  "is_same": false,
+  "confidence": 1.0,
+  "differences": [
+    "背景图案和风格完全不同：第一张是纯色蓝色背景，第二张是复杂的3D场景",
+    "顶部的音乐平台Logo和文字不同：第一张是"网易云音乐"，第二张是"QQ音乐"",
+    "整体构图和视觉设计风格截然不同，一张简洁，一张复杂且富有立体感"
+  ],
+  "notes": "两张专辑封面共享相同的核心项目名称，但整体设计、背景、品牌标识和艺术风格均不同",
+  "success": true
+}
+```
+
 ---
 
 ### 步骤 15: 添加代码节点 - 数据整合与核验
@@ -764,7 +872,10 @@ GEMINI_API_KEY=your_api_key_here
 - `qqmusic_interval` → 来自 `parse_qqmusic_response.interval` (平铺字段)
 - `qqmusic_album_name` → 来自 `parse_qqmusic_response.album_name` (平铺字段)
 - `qqmusic_parsed_data` → 来自 `parse_qqmusic_response.parsed_data` (完整数据，供参考)
-- `cover_match_result` → 来自 Gemini 封面比较节点（如果有）
+- `gemini_is_same` → 来自 `parse_gemini_response.is_same` (可选)
+- `gemini_confidence` → 来自 `parse_gemini_response.confidence` (可选)
+- `gemini_differences` → 来自 `parse_gemini_response.differences` (可选)
+- `gemini_notes` → 来自 `parse_gemini_response.notes` (可选)
 
 **⚠️ 重要**:
 
@@ -784,11 +895,15 @@ def main(
     qqmusic_interval: int = 0,
     qqmusic_album_name: str = "",
     qqmusic_parsed_data: dict = None,
-    cover_match_result: str = None
+    gemini_is_same: bool = None,
+    gemini_confidence: float = None,
+    gemini_differences: list = None,
+    gemini_notes: str = None
 ) -> dict:
     """
     整合多源数据并生成核验报告 (Phase 1 增强版)
     使用平铺字段，避免 Dify Cloud 嵌套访问限制
+    使用 Gemini AI 的封面图比较结果
     """
     try:
         fields = {}
@@ -883,33 +998,22 @@ def main(
                     fields['lyrics']['status'] = "存疑"
                     fields['lyrics']['note'] = f"相似度 {similarity:.2%}"
 
-        # 6. 🆕 核验封面图 (Phase 1 增强)
+        # 6. 🆕 核验封面图 (Phase 1 增强 - 使用 Gemini AI)
         fields['cover_art'] = {"value": netease_data.get('cover_url', ''), "status": "未查到"}
         
-        if cover_match_result:
-            # 尝试解析 JSON
-            try:
-                json_match = re.search(r'\{.*\}', cover_match_result, re.DOTALL)
-                if json_match:
-                    cover_data = json.loads(json_match.group())
-                    is_same = cover_data.get('is_same', False)
-                    confidence = cover_data.get('confidence', 0.0)
-                    
-                    if is_same and confidence > 0.8:
-                        fields['cover_art']['status'] = "确认"
-                    else:
-                        fields['cover_art']['status'] = "存疑"
-                    
-                    fields['cover_art']['ai_comparison'] = {
-                        "is_same": is_same,
-                        "confidence": confidence,
-                        "differences": cover_data.get('differences', []),
-                        "notes": cover_data.get('notes', '')
-                    }
-            except:
-                # Fallback 到文本解析
-                if '相同' in cover_match_result.lower() or 'same' in cover_match_result.lower():
-                    fields['cover_art']['status'] = "确认"
+        if gemini_is_same is not None:
+            # 使用 Gemini 解析后的结果
+            if gemini_is_same and gemini_confidence and gemini_confidence > 0.8:
+                fields['cover_art']['status'] = "确认"
+            else:
+                fields['cover_art']['status'] = "存疑"
+            
+            fields['cover_art']['ai_comparison'] = {
+                "is_same": gemini_is_same,
+                "confidence": gemini_confidence or 0.0,
+                "differences": gemini_differences or [],
+                "notes": gemini_notes or ''
+            }
 
         # 生成摘要
         confirmed = sum(1 for f in fields.values() if f.get('status') == '确认')
