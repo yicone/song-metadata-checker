@@ -621,7 +621,67 @@ def main(cover_response: str) -> dict:
 
 ---
 
-### 步骤 13: 添加 HTTP 节点 - Gemini 封面图比较 (可选)
+### 步骤 13: 添加代码节点 - 下载并转换封面图为 Base64 (可选)
+
+**节点类型**: Code  
+**节点名称**: `download_and_encode_covers`  
+**描述**: 下载两张封面图并转换为 base64 编码
+
+**⚠️ 说明**: 此节点为可选，仅在需要封面图比较时添加
+
+**输入变量**:
+
+- `netease_cover_url` → 来自 `initial_data_structuring.cover_art_url`
+- `qqmusic_cover_url` → 来自 `parse_cover_url.cover_url`
+
+**代码**:
+
+```python
+import requests
+import base64
+
+def main(netease_cover_url: str, qqmusic_cover_url: str) -> dict:
+    """
+    下载封面图并转换为 base64 编码
+    Gemini Vision API 需要 base64 格式的图片数据
+    """
+    try:
+        # 1. 下载网易云封面图
+        netease_response = requests.get(netease_cover_url, timeout=10)
+        netease_response.raise_for_status()
+        netease_base64 = base64.b64encode(netease_response.content).decode('utf-8')
+        
+        # 2. 下载 QQ 音乐封面图
+        qqmusic_response = requests.get(qqmusic_cover_url, timeout=10)
+        qqmusic_response.raise_for_status()
+        qqmusic_base64 = base64.b64encode(qqmusic_response.content).decode('utf-8')
+        
+        return {
+            "netease_cover_base64": netease_base64,
+            "qqmusic_cover_base64": qqmusic_base64,
+            "success": True,
+            "error": ""
+        }
+    
+    except Exception as e:
+        return {
+            "netease_cover_base64": "",
+            "qqmusic_cover_base64": "",
+            "success": False,
+            "error": str(e)
+        }
+```
+
+**输出变量**:
+
+- `netease_cover_base64` (String) - 网易云封面图 base64
+- `qqmusic_cover_base64` (String) - QQ 音乐封面图 base64
+- `success` (Boolean) - 下载状态
+- `error` (String) - 错误信息
+
+---
+
+### 步骤 14: 添加 HTTP 节点 - Gemini 封面图比较 (可选)
 
 **节点类型**: HTTP Request  
 **节点名称**: `gemini_cover_comparison`  
@@ -632,8 +692,9 @@ def main(cover_response: str) -> dict:
 **配置**:
 
 - **Method**: POST
-- **URL**: `{{env.GEMINI_API_BASE_URL}}/models/gemini-pro-vision:generateContent?key={{env.GEMINI_API_KEY}}`
+- **URL**: `{{env.GEMINI_API_BASE_URL}}/v1beta/models/gemini-2.5-flash-lite:generateContent`
 - **Headers**:
+  - `x-goog-api-key`: `{{env.GEMINI_API_KEY}}`
   - `Content-Type`: `application/json`
 - **Timeout**: 30000ms
 
@@ -649,13 +710,13 @@ def main(cover_response: str) -> dict:
       {
         "inline_data": {
           "mime_type": "image/jpeg",
-          "data": "{{initial_data_structuring.cover_art_url}}"
+          "data": "{{download_and_encode_covers.netease_cover_base64}}"
         }
       },
       {
         "inline_data": {
           "mime_type": "image/jpeg",
-          "data": "{{parse_cover_url.cover_url}}"
+          "data": "{{download_and_encode_covers.qqmusic_cover_base64}}"
         }
       }
     ]
@@ -667,15 +728,31 @@ def main(cover_response: str) -> dict:
 
 - `body.candidates[0].content.parts[0].text` → 保存为 `cover_match_result`
 
-**⚠️ 注意**:
+**⚠️ 关键修复**:
 
-- 图片需要转换为 base64 编码
-- 如果封面图 URL 无法直接使用，需要先下载图片再编码
-- Gemini API 配额有限，注意使用频率
+1. **模型名称**: 使用 `gemini-2.5-flash-lite`（免费版最新模型）而不是已弃用的 `gemini-1.5-flash` 或 `gemini-pro-vision`
+2. **API 路径**: 使用 `/v1beta/models/` 而不是 `/models/`
+3. **图片格式**: 使用 base64 编码的图片数据，而不是 URL
+4. **GEMINI_API_BASE_URL**: 应该设置为 `https://generativelanguage.googleapis.com`
+
+**免费版模型对比** (截至 2025-10-27):
+
+| 模型 | RPM | TPM | RPD | 状态 |
+|------|-----|-----|-----|------|
+| Gemini 2.5 Flash-Lite | 15 | 250,000 | 1,000 | ✅ 推荐 |
+| Gemini 2.5 Flash | 10 | 250,000 | 250 | ✅ 可用 |
+| Gemini 1.5 Flash | 15 | 250,000 | 50 | ❌ 已弃用 |
+
+**环境变量设置**:
+
+```
+GEMINI_API_BASE_URL=https://generativelanguage.googleapis.com
+GEMINI_API_KEY=your_api_key_here
+```
 
 ---
 
-### 步骤 14: 添加代码节点 - 数据整合与核验
+### 步骤 15: 添加代码节点 - 数据整合与核验
 
 **节点类型**: Code  
 **节点名称**: `consolidate`
@@ -919,7 +996,7 @@ def main(
 
 ---
 
-### 步骤 15: 添加 End 节点
+### 步骤 16: 添加 End 节点
 
 **节点类型**: End  
 **节点名称**: `end`
