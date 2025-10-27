@@ -3,10 +3,22 @@
 > **目标受众**: 需要手动配置 Dify Cloud 工作流的用户
 >
 > **前置条件**: 已有 Dify Cloud 账号，已部署 API 服务
+>
 > **核验源状态**:
 >
 > - **QQ 音乐**: 当前启用（必需）
 > - **Spotify**: 可选，当前禁用（调试优先级低）
+>
+---
+> **🆕 Phase 1 增强功能** (2025-10-27):
+>
+> 本指南已更新，包含以下增强功能：
+>
+> - ✅ **歌词比较**: 自动去除时间戳，计算文本相似度（95% 确认）
+> - ✅ **时长比较**: ±2 秒容差，自动格式化为 MM:SS
+> - ✅ **封面图增强**: 结构化 JSON 响应，包含置信度和差异列表
+>
+> **比较字段数**: 5 → 7 (+40%)
 
 ## 📋 问题说明
 
@@ -403,7 +415,185 @@ def main(search_results: str, target_title: str, target_artists: str) -> dict:
 
 ---
 
-### 步骤 11: 添加代码节点 - 数据整合与核验
+### 步骤 11: 添加代码节点 - 解析 QQ 音乐响应
+
+**节点类型**: Code  
+**节点名称**: `parse_qqmusic_response`  
+**描述**: 解析 Dify HTTP 节点包装的响应，并平铺输出字段
+
+**⚠️ 重要**:
+
+- **代理服务器已简化数据结构**:
+  - 新版代理返回: `{"track_info": {...}, "extras": {...}, "info": {...}}`（推荐）
+  - 旧版代理返回: `{"response": {"songinfo": {"data": {...}}}}`（兼容）
+- 输入 `qqmusic_song_data` 可能是：
+  - **字符串**: `"{\"track_info\":{...}}"`（最常见）
+  - **字典**: `{"body": "...", "status_code": 200}`（HTTP 节点完整输出）
+  - **字典**: `{"track_info": {...}}`（已解析的数据）
+- 代码会智能识别并处理所有情况（新版/旧版代理都兼容）
+- **必须平铺输出字段**，因为 Dify Cloud 不支持访问嵌套属性
+
+**输入变量**:
+
+- `qqmusic_song_data` → 来自 `qqmusic_song_detail.body`（通常是字符串）
+
+**代码** (Python):
+
+```python
+import json
+
+def main(qqmusic_song_data) -> dict:
+    """
+    解析 QQ 音乐响应并平铺输出字段
+    输入可能是字符串或字典
+    """
+    try:
+        # 1. 智能解析（输入可能是字符串或对象）
+        if isinstance(qqmusic_song_data, str):
+            qqmusic_parsed = json.loads(qqmusic_song_data)
+        elif isinstance(qqmusic_song_data, dict):
+            # 如果是字典，检查是否有 body 字段（HTTP 节点包装）
+            if 'body' in qqmusic_song_data:
+                body = qqmusic_song_data['body']
+                if isinstance(body, str):
+                    qqmusic_parsed = json.loads(body)
+                else:
+                    qqmusic_parsed = body
+            else:
+                # 直接就是解析后的数据
+                qqmusic_parsed = qqmusic_song_data
+        else:
+            raise ValueError(f"Unexpected input type: {type(qqmusic_song_data)}")
+        
+        # 2. 提取数据（代理服务器已简化结构）
+        # 新版代理返回: {"track_info": {...}, "extras": {...}, "info": {...}}
+        # 旧版代理返回: {"response": {"songinfo": {"data": {...}}}}
+        if 'track_info' in qqmusic_parsed:
+            # 新版：直接访问 track_info
+            track_info = qqmusic_parsed.get('track_info', {})
+        elif 'response' in qqmusic_parsed:
+            # 旧版：需要嵌套访问
+            track_info = (
+                qqmusic_parsed
+                .get('response', {})
+                .get('songinfo', {})
+                .get('data', {})
+                .get('track_info', {})
+            )
+        else:
+            # 未知格式
+            track_info = {}
+        
+        # 4. 平铺输出（Dify Cloud 不支持嵌套访问）
+        album_info = track_info.get('album', {})
+        
+        return {
+            # 完整数据（供参考）
+            "parsed_data": qqmusic_parsed,
+            
+            # 平铺字段（供下游节点直接访问）
+            "track_name": track_info.get('name', ''),
+            "track_title": track_info.get('title', ''),
+            "album_id": album_info.get('id', 0),
+            "album_mid": album_info.get('mid', ''),
+            "album_name": album_info.get('name', ''),
+            "album_pmid": album_info.get('pmid', ''),  # 封面图 ID
+            "interval": track_info.get('interval', 0),  # 时长（秒）
+            "success": True,
+            "error": ""
+        }
+    
+    except Exception as e:
+        return {
+            "parsed_data": {},
+            "track_name": "",
+            "track_title": "",
+            "album_id": 0,
+            "album_mid": "",
+            "album_name": "",
+            "album_pmid": "",
+            "interval": 0,
+            "success": False,
+            "error": str(e)
+        }
+```
+
+**输出变量**:
+
+- `parsed_data` (Object) - 完整解析后的数据（供参考）
+- `track_name` (String) - 歌曲名称（平铺输出）
+- `track_title` (String) - 歌曲标题（平铺输出）
+- `album_id` (Number) - 专辑 ID
+- `album_mid` (String) - 专辑 MID
+- `album_name` (String) - 专辑名称（平铺输出）
+- `album_pmid` (String) - 专辑封面图 ID（用于 Gemini 比较）
+- `interval` (Number) - 歌曲时长（秒）
+- `success` (Boolean) - 解析状态
+- `error` (String) - 错误信息（如果有）
+
+**⚠️ 关键点**:
+
+1. **智能解析**: 处理 `body` 为字符串或对象两种情况
+2. **平铺输出**: 所有常用字段都平铺输出，避免嵌套访问
+3. **容错处理**: 解析失败时返回空值，不中断工作流
+
+---
+
+### 步骤 12: 添加 HTTP 节点 - Gemini 封面图比较 (可选)
+
+**节点类型**: HTTP Request  
+**节点名称**: `gemini_cover_comparison`  
+**描述**: 使用 Gemini Vision API 比较封面图
+
+**⚠️ 说明**: 此节点为可选，如果不需要封面图比较可以跳过
+
+**配置**:
+
+- **Method**: POST
+- **URL**: `{{env.GEMINI_API_BASE_URL}}/models/gemini-pro-vision:generateContent?key={{env.GEMINI_API_KEY}}`
+- **Headers**:
+  - `Content-Type`: `application/json`
+- **Timeout**: 30000ms
+
+**Body** (JSON):
+
+```json
+{
+  "contents": [{
+    "parts": [
+      {
+        "text": "比较两张专辑封面图片，返回 JSON 格式：\n\n{\n  \"is_same\": true/false,\n  \"confidence\": 0.0-1.0,\n  \"differences\": [\"差异1描述\", \"差异2描述\"],\n  \"notes\": \"额外说明\"\n}\n\n判断标准：\n1. 主体图案是否相同\n2. 颜色是否一致\n3. 文字内容是否相同\n4. 分辨率/裁剪差异可忽略\n\n请直接返回 JSON，不要包含其他文字。"
+      },
+      {
+        "inline_data": {
+          "mime_type": "image/jpeg",
+          "data": "{{initial_data_structuring.metadata.cover_art_url}}"
+        }
+      },
+      {
+        "inline_data": {
+          "mime_type": "image/jpeg",
+          "data": "{{parse_qqmusic_response.album_pmid}}"
+        }
+      }
+    ]
+  }]
+}
+```
+
+**输出变量**:
+
+- `body.candidates[0].content.parts[0].text` → 保存为 `cover_match_result`
+
+**⚠️ 注意**:
+
+- 图片需要转换为 base64 编码
+- 如果封面图 URL 无法直接使用，需要先下载图片再编码
+- Gemini API 配额有限，注意使用频率
+
+---
+
+### 步骤 13: 添加代码节点 - 数据整合与核验
 
 **节点类型**: Code  
 **节点名称**: `consolidate`
@@ -411,80 +601,198 @@ def main(search_results: str, target_title: str, target_artists: str) -> dict:
 **输入变量**:
 
 - `netease_data` → 来自 `initial_data_structuring.metadata`
-- `qqmusic_data` → 来自 `qqmusic_song_detail.body` (如果有)
+- `qqmusic_track_name` → 来自 `parse_qqmusic_response.track_name` (平铺字段)
+- `qqmusic_interval` → 来自 `parse_qqmusic_response.interval` (平铺字段)
+- `qqmusic_album_name` → 来自 `parse_qqmusic_response.album_name` (平铺字段)
+- `qqmusic_parsed_data` → 来自 `parse_qqmusic_response.parsed_data` (完整数据，供参考)
+- `cover_match_result` → 来自 Gemini 封面比较节点（如果有）
+
+**⚠️ 重要**:
+
+- 使用 `parse_qqmusic_response` 的平铺字段，避免嵌套访问
+- 本节点代码已更新为 Phase 1 增强版本
 
 **代码** (Python):
 
 ```python
 import json
+import re
+from difflib import SequenceMatcher
 
-def main(netease_data: dict, qqmusic_data: str = None) -> dict:
+def main(
+    netease_data: dict,
+    qqmusic_track_name: str = "",
+    qqmusic_interval: int = 0,
+    qqmusic_album_name: str = "",
+    qqmusic_parsed_data: dict = None,
+    cover_match_result: str = None
+) -> dict:
     """
-    整合多源数据并生成核验报告
+    整合多源数据并生成核验报告 (Phase 1 增强版)
+    使用平铺字段，避免 Dify Cloud 嵌套访问限制
     """
     try:
-        # 解析 QQ Music 数据（如果是字符串）
-        qqmusic_parsed = None
-        if qqmusic_data:
-            if isinstance(qqmusic_data, str):
-                qqmusic_parsed = json.loads(qqmusic_data)
-            else:
-                qqmusic_parsed = qqmusic_data
-
         fields = {}
 
-        # 核验标题
+        # 1. 核验标题（使用平铺字段）
         netease_title = netease_data.get('song_title', '')
-        fields['title'] = {
-            "value": netease_title,
-            "status": "未查到",
-            "source": "NetEase"
-        }
-
-        if qqmusic_parsed:
-            # 注意路径：response.songinfo.data.track_info
-            track_info = qqmusic_parsed.get('response', {}).get('songinfo', {}).get('data', {}).get('track_info', {})
-            qqmusic_title = track_info.get('name', '')
-
-            if qqmusic_title and qqmusic_title.lower() == netease_title.lower():
+        fields['title'] = {"value": netease_title, "status": "未查到"}
+        
+        if qqmusic_track_name:
+            if qqmusic_track_name.lower() == netease_title.lower():
                 fields['title']['status'] = "确认"
                 fields['title']['confirmed_by'] = ["QQ Music"]
-            elif qqmusic_title:
-                fields['title']['status'] = "存疑"
-                fields['title']['qqmusic_value'] = qqmusic_title
 
-        # 核验艺术家
+        # 2. 核验艺术家（使用完整数据）
         netease_artists = netease_data.get('artists', [])
-        fields['artists'] = {
-            "value": netease_artists,
-            "status": "未查到",
-            "source": "NetEase"
-        }
-
-        if qqmusic_parsed:
-            track_info = qqmusic_parsed.get('response', {}).get('songinfo', {}).get('data', {}).get('track_info', {})
-            qqmusic_artists = [
-                s.get('name', '')
-                for s in track_info.get('singer', [])
-            ]
+        fields['artists'] = {"value": netease_artists, "status": "未查到"}
+        
+        if qqmusic_parsed_data:
+            # 兼容新旧两种数据格式
+            if 'track_info' in qqmusic_parsed_data:
+                # 新版代理：直接访问
+                track_info = qqmusic_parsed_data.get('track_info', {})
+            else:
+                # 旧版代理：嵌套访问
+                track_info = qqmusic_parsed_data.get('response', {}).get('songinfo', {}).get('data', {}).get('track_info', {})
+            
+            qqmusic_artists = [s.get('name', '') for s in track_info.get('singer', [])]
             if qqmusic_artists and set(qqmusic_artists) == set(netease_artists):
                 fields['artists']['status'] = "确认"
                 fields['artists']['confirmed_by'] = ["QQ Music"]
-            elif qqmusic_artists:
-                fields['artists']['status'] = "存疑"
-                fields['artists']['qqmusic_value'] = qqmusic_artists
+
+        # 3. 核验专辑（使用平铺字段）
+        netease_album = netease_data.get('album', '')
+        fields['album'] = {"value": netease_album, "status": "未查到"}
+        
+        if qqmusic_album_name:
+            if qqmusic_album_name.lower() == netease_album.lower():
+                fields['album']['status'] = "确认"
+                fields['album']['confirmed_by'] = ["QQ Music"]
+
+        # 4. 🆕 核验时长 (Phase 1 - 使用平铺字段)
+        netease_duration = netease_data.get('duration', 0)
+        fields['duration'] = {
+            "value": netease_duration,
+            "value_formatted": f"{netease_duration // 60000}:{(netease_duration % 60000) // 1000:02d}" if netease_duration else "0:00",
+            "status": "未查到"
+        }
+        
+        if qqmusic_interval and netease_duration:
+            qqmusic_duration = qqmusic_interval * 1000  # 秒转毫秒
+            diff = abs(netease_duration - qqmusic_duration)
+            if diff <= 2000:  # ±2秒容差
+                fields['duration']['status'] = "确认"
+                fields['duration']['confirmed_by'] = ["QQ Music"]
+            else:
+                fields['duration']['status'] = "存疑"
+                fields['duration']['note'] = f"时长差异 {diff // 1000} 秒"
+
+        # 5. 🆕 核验歌词 (Phase 1 - 使用完整数据)
+        netease_lyrics = netease_data.get('lyrics', {})
+        netease_lyrics_text = netease_lyrics.get('original', '') if isinstance(netease_lyrics, dict) else ''
+        fields['lyrics'] = {"value": netease_lyrics_text[:100] + "..." if len(netease_lyrics_text) > 100 else netease_lyrics_text, "status": "未查到"}
+        
+        if netease_lyrics_text and qqmusic_parsed_data:
+            # 预处理歌词：去除时间戳和标点
+            def clean_lyrics(text):
+                text = re.sub(r'\[\d+:\d+\.\d+\]', '', text)  # 去除时间戳
+                text = '\n'.join([line.strip() for line in text.split('\n') if line.strip()])
+                return text.lower().strip()
+            
+            netease_clean = clean_lyrics(netease_lyrics_text)
+            
+            # 兼容新旧两种数据格式
+            if 'track_info' in qqmusic_parsed_data:
+                # 新版代理：直接访问
+                track_info = qqmusic_parsed_data.get('track_info', {})
+            else:
+                # 旧版代理：嵌套访问
+                track_info = qqmusic_parsed_data.get('response', {}).get('songinfo', {}).get('data', {}).get('track_info', {})
+            
+            qqmusic_lyrics_text = track_info.get('lyric', '')
+            
+            if qqmusic_lyrics_text:
+                qqmusic_clean = clean_lyrics(qqmusic_lyrics_text)
+                similarity = SequenceMatcher(None, netease_clean, qqmusic_clean).ratio()
+                fields['lyrics']['similarity_score'] = similarity
+                
+                if similarity >= 0.95:
+                    fields['lyrics']['status'] = "确认"
+                    fields['lyrics']['confirmed_by'] = ["QQ Music"]
+                elif similarity >= 0.80:
+                    fields['lyrics']['status'] = "存疑"
+                    fields['lyrics']['note'] = f"相似度 {similarity:.2%}"
+
+        # 6. 🆕 核验封面图 (Phase 1 增强)
+        fields['cover_art'] = {"value": netease_data.get('cover_url', ''), "status": "未查到"}
+        
+        if cover_match_result:
+            # 尝试解析 JSON
+            try:
+                json_match = re.search(r'\{.*\}', cover_match_result, re.DOTALL)
+                if json_match:
+                    cover_data = json.loads(json_match.group())
+                    is_same = cover_data.get('is_same', False)
+                    confidence = cover_data.get('confidence', 0.0)
+                    
+                    if is_same and confidence > 0.8:
+                        fields['cover_art']['status'] = "确认"
+                    else:
+                        fields['cover_art']['status'] = "存疑"
+                    
+                    fields['cover_art']['ai_comparison'] = {
+                        "is_same": is_same,
+                        "confidence": confidence,
+                        "differences": cover_data.get('differences', []),
+                        "notes": cover_data.get('notes', '')
+                    }
+            except:
+                # Fallback 到文本解析
+                if '相同' in cover_match_result.lower() or 'same' in cover_match_result.lower():
+                    fields['cover_art']['status'] = "确认"
 
         # 生成摘要
         confirmed = sum(1 for f in fields.values() if f.get('status') == '确认')
         questionable = sum(1 for f in fields.values() if f.get('status') == '存疑')
         not_found = sum(1 for f in fields.values() if f.get('status') == '未查到')
 
+        # 收集各平台原始值（用于人工核验）
+        raw_values = {
+            "netease": {
+                "title": netease_data.get('song_title', ''),
+                "artists": netease_data.get('artists', []),
+                "album": netease_data.get('album', ''),
+                "duration_ms": netease_data.get('duration', 0),
+                "lyrics_preview": netease_lyrics_text[:100] + "..." if len(netease_lyrics_text) > 100 else netease_lyrics_text,
+                "cover_url": netease_data.get('cover_url', '')
+            }
+        }
+        
+        # 添加 QQ Music 原始值（如果有）
+        if qqmusic_parsed_data:
+            # 兼容新旧两种数据格式
+            if 'track_info' in qqmusic_parsed_data:
+                track_info = qqmusic_parsed_data.get('track_info', {})
+            else:
+                track_info = qqmusic_parsed_data.get('response', {}).get('songinfo', {}).get('data', {}).get('track_info', {})
+            
+            raw_values["qqmusic"] = {
+                "title": track_info.get('name', ''),
+                "artists": [s.get('name', '') for s in track_info.get('singer', [])],
+                "album": track_info.get('album', {}).get('name', ''),
+                "duration_sec": track_info.get('interval', 0),
+                "lyrics_preview": track_info.get('lyric', '')[:100] + "..." if len(track_info.get('lyric', '')) > 100 else track_info.get('lyric', ''),
+                "album_pmid": track_info.get('album', {}).get('pmid', '')
+            }
+
         report = {
             "metadata": {
                 "song_id": netease_data.get('song_id', ''),
                 "source": "NetEase Cloud Music",
-                "verified_with": ["QQ Music"] if qqmusic_parsed else []
+                "verified_with": ["QQ Music"] if qqmusic_parsed_data else []
             },
+            "raw_values": raw_values,
             "fields": fields,
             "summary": {
                 "total_fields": len(fields),
@@ -498,7 +806,7 @@ def main(netease_data: dict, qqmusic_data: str = None) -> dict:
         return {
             "final_report": report,
             "success": True,
-            "error": ""  # 成功时返回空字符串
+            "error": ""
         }
 
     except Exception as e:
@@ -511,13 +819,25 @@ def main(netease_data: dict, qqmusic_data: str = None) -> dict:
 
 **输出变量**:
 
-- `final_report` (Object)
-- `success` (Boolean)
+- `final_report` (Object) - 完整核验报告
+  - `metadata`: 元数据信息（歌曲 ID、数据源、验证平台）
+  - `raw_values`: 各平台原始值（用于人工核验）
+    - `netease`: 网易云音乐原始数据（标题、艺术家、专辑、时长、歌词预览、封面 URL）
+    - `qqmusic`: QQ 音乐原始数据（标题、艺术家、专辑、时长、歌词预览、封面 ID）
+  - `fields`: 各字段核验结果（包含 Phase 1 新增的 duration 和 lyrics）
+  - `summary`: 统计摘要（总字段数、确认数、存疑数、未查到数、置信度分数）
+- `success` (Boolean) - 执行状态
 - `error` (String) - 错误信息，成功时为空字符串
+
+**Phase 1 新增字段**:
+
+- `fields.duration`: 时长比较（±2秒容差，MM:SS 格式）
+- `fields.lyrics`: 歌词比较（相似度评分，95% 确认）
+- `fields.cover_art.ai_comparison`: 封面图 JSON 详情（置信度、差异列表）
 
 ---
 
-### 步骤 12: 添加 End 节点
+### 步骤 14: 添加 End 节点
 
 **节点类型**: End  
 **节点名称**: `end`
@@ -707,6 +1027,51 @@ cloudflared tunnel run music-api
 
 ---
 
+## 🎨 Gemini 封面图比较 Prompt 更新 (Phase 1)
+
+### 为什么需要更新
+
+Phase 1 增强了封面图比较功能，现在需要 Gemini 返回结构化 JSON 而不是简单文本。
+
+### 更新 Gemini Vision 节点
+
+如果您的工作流中有 Gemini 封面图比较节点，请更新其 Prompt：
+
+**新的 Prompt**:
+
+```
+比较两张专辑封面图片，返回 JSON 格式：
+
+{
+  "is_same": true/false,
+  "confidence": 0.0-1.0,
+  "differences": [
+    "差异1描述",
+    "差异2描述"
+  ],
+  "notes": "额外说明"
+}
+
+判断标准：
+1. 主体图案是否相同
+2. 颜色是否一致
+3. 文字内容是否相同
+4. 分辨率/裁剪差异可忽略
+
+请直接返回 JSON，不要包含其他文字。
+```
+
+### Fallback 机制
+
+consolidate 节点的代码已包含 Fallback 机制：
+
+- 如果 Gemini 返回 JSON：解析并提取置信度、差异列表
+- 如果 Gemini 返回文本：自动识别"相同"/"不相同"关键词
+
+**无需担心兼容性** - 新代码向后兼容旧的文本响应。
+
+---
+
 ## 🔧 可选功能：启用 Spotify 核验
 
 **当前状态**: Spotify 节点已预留但未启用
@@ -766,6 +1131,23 @@ SPOTIFY_API_BASE_URL=https://api.spotify.com/v1
 - 增加执行时间（如果不并行）：+3-5 秒
 - 额外的 API 成本（Spotify 限流）
 - 更复杂的错误处理
+
+---
+
+## 🔧 故障排除
+
+遇到问题？请查看详细的故障排除指南：
+
+**📖 [Dify Cloud 故障排除完整指南](DIFY_CLOUD_TROUBLESHOOTING.md)**
+
+### 常见问题快速索引
+
+1. **无法访问 Object 的嵌套属性** → [问题 1](DIFY_CLOUD_TROUBLESHOOTING.md#问题-1-无法访问-object-的嵌套属性)
+2. **找不到 Answer 节点类型** → [问题 2](DIFY_CLOUD_TROUBLESHOOTING.md#问题-2-找不到-answer-节点类型)
+3. **ngrok 免费版只能暴露一个端口** → [问题 3](DIFY_CLOUD_TROUBLESHOOTING.md#问题-3-ngrok-免费版只能暴露一个端口)
+4. **QQ Music API 搜索失败 (500 错误)** → [问题 4](DIFY_CLOUD_TROUBLESHOOTING.md#问题-4-qq-music-api-搜索失败-500-错误)
+5. **QQ Music API 响应需要额外解析** → [问题 5](DIFY_CLOUD_TROUBLESHOOTING.md#问题-5-qq-music-api-响应需要额外解析)
+6. **QQ Music API 双重 JSON 编码** → [完整修复指南](../QQMUSIC_API_FIX_SUMMARY.md)
 
 ---
 

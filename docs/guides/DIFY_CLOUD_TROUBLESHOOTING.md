@@ -529,6 +529,125 @@ def main(search_results: str, target_title: str, target_artists: str) -> dict:
 
 ---
 
+### ✅ 问题 6: QQ Music API 响应数据访问问题
+
+**症状**:
+
+```
+consolidate 节点报错，无法访问 qqmusic_song_detail.body.response.songinfo.data.track_info
+或者 body 是字符串而不是对象
+```
+
+**根本原因**: Dify Cloud 的 HTTP 节点会自动包装响应
+
+**示例错误响应**:
+
+```json
+{
+  "status_code": 200,
+  "body": "{\"response\":{\"code\":0,...}}",  // ❌ body 是字符串而不是对象
+  "headers": {...}
+}
+```
+
+**重要说明**:
+
+Dify Cloud 的 HTTP 节点会自动将所有响应包装成：
+
+```json
+{
+  "status_code": 200,
+  "body": "...",      // 响应内容（可能是字符串或对象）
+  "headers": {...}
+}
+```
+
+这意味着：
+
+- 即使你的 API 返回正确的 JSON，Dify 也会包装它
+- `body` 字段可能是字符串（需要解析）或对象（直接使用）
+
+**解决方案**:
+
+#### 方案 A: 在 consolidate 节点中处理（推荐）✅
+
+在 `consolidate` 节点的代码中，添加 JSON 解析逻辑：
+
+```python
+import json
+
+def main(qqmusic_data: dict) -> dict:
+    # 处理 Dify Cloud 的 HTTP 节点包装
+    body = qqmusic_data.get('body', {})
+    
+    # 如果 body 是字符串，解析它
+    if isinstance(body, str):
+        try:
+            qqmusic_parsed = json.loads(body)
+        except:
+            qqmusic_parsed = None
+    else:
+        # 已经是对象，直接使用
+        qqmusic_parsed = body
+    
+    # 现在可以访问数据
+    if qqmusic_parsed:
+        track_info = qqmusic_parsed.get('response', {}).get('songinfo', {}).get('data', {}).get('track_info', {})
+        # ...
+```
+
+**优势**:
+
+- ✅ 不需要修改代理服务器
+- ✅ 兼容字符串和对象两种情况
+- ✅ 更健壮
+
+#### 方案 B: 在 Dify 中添加解析节点
+
+如果无法修改代理服务器，在步骤 10 之后添加一个代码节点：
+
+**节点名称**: `parse_qqmusic_response`
+
+**代码**:
+
+```python
+import json
+
+def main(qqmusic_response: dict) -> dict:
+    """
+    解析双重 JSON 编码的 QQ Music 响应
+    """
+    try:
+        # 检查 body 是否是字符串
+        body = qqmusic_response.get('body', {})
+        
+        if isinstance(body, str):
+            # 解析 JSON 字符串
+            parsed_body = json.loads(body)
+            return {
+                "parsed_data": parsed_body,
+                "success": True
+            }
+        else:
+            # 已经是对象，直接返回
+            return {
+                "parsed_data": body,
+                "success": True
+            }
+    except Exception as e:
+        return {
+            "parsed_data": {},
+            "success": False,
+            "error": str(e)
+        }
+```
+
+然后在 consolidate 节点中使用 `parse_qqmusic_response.parsed_data` 而不是 `qqmusic_song_detail.body`。
+
+**详细说明**: 参见 [QQ Music API 修复总结](../QQMUSIC_API_FIX_SUMMARY.md)
+
+---
+
 ## 📚 相关文档
 
 - [完整手动创建指南](DIFY_CLOUD_MANUAL_SETUP.md)

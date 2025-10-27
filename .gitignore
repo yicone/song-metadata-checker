@@ -1,3 +1,5 @@
+qqmusic-api/volumes/
+
 # Environment variables
 .env
 .env.local

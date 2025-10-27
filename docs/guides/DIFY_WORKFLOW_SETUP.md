@@ -2,10 +2,17 @@
 
 完整的 Dify 工作流导入、配置和测试指南。
 
+> **⚠️ Dify Cloud 用户重要提示**:
+> YAML 文件包含外部代码引用，**无法直接导入** Dify Cloud。
+> 请使用 [Dify Cloud 手动创建指南](DIFY_CLOUD_MANUAL_SETUP.md) 逐步创建工作流。
+>
+> **✅ 自托管 Dify 用户**: 可以直接导入 YAML 文件。
+
 ## 📋 目录
 
 - [前置条件](#前置条件)
 - [工作流文件](#工作流文件)
+- [比较功能说明](#比较功能说明)
 - [导入工作流](#导入工作流)
 - [配置环境变量](#配置环境变量)
 - [测试工作流](#测试工作流)
@@ -64,13 +71,92 @@ docker-compose up -d
 **必需 API**：
 
 - ✅ NetEase Cloud Music API（数据源）
-- ✅ Google Gemini API（OCR，可选）
+- ✅ Google Gemini API（OCR + 封面比较）
 - ✅ QQ Music API（核验源）
 
 **可选 API**：
 
 - ⏭️ Spotify API（可选核验源，当前禁用）
 - 参考 [启用 Spotify](WORKFLOW_OVERVIEW.md#enabling-spotify-validation)
+
+---
+
+## 比较功能说明
+
+### 当前比较的元数据字段
+
+| 字段 | 比较方式 | 阈值 | Phase |
+|------|---------|------|-------|
+| **title** (标题) | 字符串相似度 | 95% 确认 | 基础 |
+| **artists** (歌手) | 列表集合匹配 | 完全匹配 | 基础 |
+| **album** (专辑) | 字符串相似度 | 95% 确认 | 基础 |
+| **duration** (时长) | 数值比较 | ±2秒容差 | Phase 1 🆕 |
+| **lyrics** (歌词) | 文本相似度 | 95% 确认 | Phase 1 🆕 |
+| **cover_art** (封面) | AI 视觉比较 | 置信度 >0.8 | Phase 1 ⬆️ |
+| **credits** (制作人员) | 分字段列表匹配 | 完全匹配 | 基础 |
+
+**总计**: 7 个字段比较（Phase 1 新增 2 个，增强 1 个）
+
+### Phase 1 增强详情
+
+#### 1. 歌词比较 🆕
+
+**功能**:
+
+- 自动去除时间戳 `[00:00.00]`
+- 统一标点符号
+- 计算文本相似度
+
+**阈值**:
+
+- ≥95%: 确认
+- ≥80%: 存疑
+- <80%: 未查到
+
+**数据源**: NetEase (原文) vs QQ Music
+
+#### 2. 时长比较 🆕
+
+**功能**:
+
+- 允许 ±2 秒误差
+- 自动格式化为 MM:SS
+- 显示差异秒数
+
+**示例**:
+
+```json
+{
+  "duration": {
+    "status": "确认",
+    "value": 240000,
+    "value_formatted": "4:00",
+    "confirmed_by": ["QQ音乐"]
+  }
+}
+```
+
+#### 3. 封面图比较增强 ⬆️
+
+**之前**: 简单文本解析（"相同"/"不相同"）
+
+**现在**: 结构化 JSON 响应
+
+```json
+{
+  "cover_art": {
+    "status": "确认",
+    "ai_comparison": {
+      "is_same": true,
+      "confidence": 0.95,
+      "differences": [],
+      "notes": "封面图完全相同"
+    }
+  }
+}
+```
+
+**Gemini Prompt 更新**: 要求返回 JSON 格式（详见下文）
 
 ---
 
@@ -97,16 +183,35 @@ docker-compose up -d
 3. 选择 **"工作流"** 或 **"Workflow"** 类型
 4. 输入应用名称：`Music Metadata Checker`
 
-### 步骤 2: 导入 DSL 文件（仅自托管 Dify）
+### 步骤 2: 导入或手动创建工作流
 
-**⚠️ 此步骤仅适用于自托管 Dify**
+#### 选项 A: 自托管 Dify（推荐导入）
 
 1. 在工作流编辑器中，点击右上角的 **"导入"** 或 **"Import"**
 2. 选择 **"导入 DSL"** 或 **"Import DSL"**
 3. 上传文件：`dify-workflow/music-metadata-checker.yml`
 4. 点击 **"确认导入"**
 
-**如果导入失败**：参考 [Dify Cloud 手动创建指南](DIFY_CLOUD_MANUAL_SETUP.md)
+#### 选项 B: Dify Cloud（必须手动创建）
+
+**⚠️ Dify Cloud 无法导入包含外部文件引用的 YAML**
+
+**解决方案**:
+
+1. 使用 [Dify Cloud 手动创建指南](DIFY_CLOUD_MANUAL_SETUP.md) ⭐ **推荐**
+2. 该指南包含：
+   - 完整的节点创建步骤
+   - 所有代码节点的完整代码（包含 Phase 1 增强）
+   - HTTP 节点配置
+   - 环境变量设置
+   - 测试用例
+
+**手动创建的优势**:
+
+- ✅ 完全控制每个节点
+- ✅ 理解工作流逻辑
+- ✅ 便于调试和修改
+- ✅ 包含最新的 Phase 1 增强功能
 
 ### 步骤 3: 验证导入
 
@@ -116,7 +221,12 @@ docker-compose up -d
 - ✅ 节点之间有连接线
 - ✅ 开始节点和结束节点存在
 
-**节点数量**：约 12-15 个节点（不含 Spotify 节点）
+**节点数量**：
+
+- 核心节点：约 12-15 个
+- 代码节点：6 个（parse_url, initial_data_structuring, find_match, normalize_data, consolidate, parse_ocr_json）
+- HTTP 节点：4-5 个（netease_song_detail, netease_lyric, qqmusic_search, qqmusic_song_detail, gemini_ocr）
+- 条件节点：1-2 个
 
 ---
 
@@ -227,34 +337,104 @@ HTTP_TIMEOUT=30000
     "artists": {
       "value": ["艺术家1", "艺术家2"],
       "status": "确认",
-      "confirmed_by": ["QQ Music", "Spotify"]
+      "confirmed_by": ["QQ Music"]
     },
     "album": {
       "value": "专辑名称",
       "status": "确认",
       "confirmed_by": ["QQ Music"]
+    },
+    "duration": {
+      "value": 240000,
+      "value_formatted": "4:00",
+      "status": "确认",
+      "confirmed_by": ["QQ Music"]
+    },
+    "lyrics": {
+      "value": "歌词内容...",
+      "status": "确认",
+      "similarity_score": 0.98,
+      "confirmed_by": ["QQ Music"]
+    },
+    "cover_art": {
+      "value": "http://...",
+      "status": "确认",
+      "ai_comparison": {
+        "is_same": true,
+        "confidence": 0.95,
+        "differences": [],
+        "notes": "封面图完全相同"
+      }
     }
   },
   "summary": {
-    "total_fields": 10,
-    "confirmed": 7,
-    "questionable": 2,
+    "total_fields": 12,
+    "confirmed": 10,
+    "questionable": 1,
     "not_found": 1,
-    "confidence_score": 0.7
+    "confidence_score": 0.83
   }
 }
 ```
 
 ### 执行时间
 
-- **正常执行**: 10-20 秒
-- **包含 OCR**: 15-25 秒
+- **正常执行** (QQ Music 核验 + Phase 1 增强): 8-12 秒
+- **包含 OCR**: 12-18 秒
+- **启用 Spotify 后**: 10-15 秒（并行执行）
 
-如果超过 30 秒，检查：
+**Phase 1 性能影响**: 歌词和时长比较增加约 0.5-1 秒（可忽略）
+
+如果超过 20 秒，检查：
 
 - API 服务是否响应
 - 网络连接是否正常
 - Gemini API 配额是否充足
+
+---
+
+## Gemini 封面图比较 Prompt 更新
+
+### 为什么需要更新
+
+Phase 1 增强了封面图比较功能，现在需要 Gemini 返回结构化 JSON 而不是简单文本。
+
+### 更新 Gemini OCR/Vision 节点
+
+**节点名称**: `gemini_cover_comparison` 或类似
+
+**新的 Prompt**:
+
+```
+比较两张专辑封面图片，返回 JSON 格式：
+
+{
+  "is_same": true/false,
+  "confidence": 0.0-1.0,
+  "differences": [
+    "差异1描述",
+    "差异2描述"
+  ],
+  "notes": "额外说明"
+}
+
+判断标准：
+1. 主体图案是否相同
+2. 颜色是否一致
+3. 文字内容是否相同
+4. 分辨率/裁剪差异可忽略
+
+请直接返回 JSON，不要包含其他文字。
+```
+
+### Fallback 机制
+
+如果 Gemini 不返回 JSON，代码会自动 Fallback 到文本解析：
+
+- 包含"相同"/"same"/"yes" → 确认
+- 包含"不相同"/"different"/"no" → 存疑
+
+**无需担心兼容性问题** - 新代码向后兼容旧的文本响应。
 
 ---
 

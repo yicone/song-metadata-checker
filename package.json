@@ -5,8 +5,8 @@
   "private": true,
   "scripts": {
     "prepare": "husky",
-    "lint:md": "markdownlint '**/*.md' --ignore node_modules --ignore .venv --ignore services/qqmusic-api/node_modules --ignore services/netease-api/node_modules",
-    "lint:md:fix": "markdownlint '**/*.md' --ignore node_modules --ignore .venv --ignore services/qqmusic-api/node_modules --ignore services/netease-api/node_modules --fix",
+    "lint:md": "markdownlint '**/*.md' --ignore node_modules --ignore .venv --ignore services/qqmusic-api/node_modules --ignore services/qqmusic-api/volumes --ignore services/netease-api/node_modules",
+    "lint:md:fix": "markdownlint '**/*.md' --ignore node_modules --ignore .venv --ignore services/qqmusic-api/node_modules --ignore services/qqmusic-api/volumes --ignore services/netease-api/node_modules --fix",
     "format:md": "prettier --check '**/*.md'",
     "format:md:fix": "prettier --write '**/*.md'",
     "doc:check": "DOC_AI_CHECK=true ./scripts/doc-agent-check.sh standard",
@@ -19,8 +19,8 @@
       "markdownlint --fix"
     ],
     "*.py": [
-      "ruff check --fix",
-      "ruff format"
+      ".venv/bin/ruff check --fix",
+      ".venv/bin/ruff format"
     ]
   },
   "devDependencies": {
