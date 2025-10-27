@@ -329,29 +329,38 @@ def main(search_results: str, target_title: str, target_artists: str) -> dict:
     从搜索结果中找到最佳匹配
     """
     try:
-        # QQ Music API 返回的 body 是 JSON 字符串，需要解析
+        # 调试：输出输入类型
+        print(f"[DEBUG] search_results 类型: {type(search_results)}")
+        print(f"[DEBUG] search_results 前100字符: {str(search_results)[:100]}")
+        
+        # QQ Music API 返回的 body 可能是 JSON 字符串或已解析的 dict
         if isinstance(search_results, str):
             search_data = json.loads(search_results)
         else:
             search_data = search_results
 
-        # 调试：输出完整响应结构
-        print(f"QQ Music API 响应: {json.dumps(search_data, ensure_ascii=False, indent=2)}")
-
+        # 调试：输出数据结构的键
+        print(f"[DEBUG] search_data 类型: {type(search_data)}")
+        print(f"[DEBUG] search_data 顶层键: {list(search_data.keys()) if isinstance(search_data, dict) else 'NOT A DICT'}")
+        
         # 提取搜索结果列表
-        # 注意：QQ Music API 的数据结构是 response.data.song.list
-        results = search_data.get('response', {}).get('data', {}).get('song', {}).get('list', [])
-
-        print(f"搜索结果数量: {len(results)}")
+        # ⚠️ 注意：代理服务器已经提取了 response.data，所以直接访问 song.list
+        # 上游 API: response.data.song.list
+        # 代理返回: song.list (已去除 response.data 层级)
+        song = search_data.get('song', {})
+        print(f"[DEBUG] song 键: {list(song.keys()) if isinstance(song, dict) else 'NOT A DICT'}")
+        
+        results = song.get('list', [])
+        print(f"[DEBUG] 搜索结果数量: {len(results)}")
+        
         if results:
-            print(f"第一个结果: {json.dumps(results[0], ensure_ascii=False)}")
+            print(f"[DEBUG] 第一个结果: {json.dumps(results[0], ensure_ascii=False)[:200]}")
 
         if not results:
             return {
                 "match_id": "",
                 "match_found": False,
-                "error": "搜索无结果",
-                "debug_data": search_data  # 调试：返回原始数据
+                "error": "搜索无结果"
             }
 
         # 简单匹配：取第一个结果
@@ -362,12 +371,15 @@ def main(search_results: str, target_title: str, target_artists: str) -> dict:
             "match_id": best_match.get('songmid', ''),
             "match_name": best_match.get('songname', ''),  # Unicode 会自动解码
             "match_album": best_match.get('albumname', ''),
-            "match_found": True
+            "match_found": True,
+            "error": ""
         }
 
     except Exception as e:
         return {
             "match_id": "",
+            "match_name": "",
+            "match_album": "",
             "match_found": False,
             "error": str(e)
         }
@@ -375,9 +387,10 @@ def main(search_results: str, target_title: str, target_artists: str) -> dict:
 
 **⚠️ 重要**:
 
-- QQ Music API 的 `body` 是 JSON 字符串，需要 `json.loads()` 解析
+- 代理服务器返回的数据结构是 `song.list`（已去除 `response.data` 层级）
+- 上游 Rain120 API 的完整结构是 `response.data.song.list`
+- 代理服务器在 `server-proxy.py:67` 中提取了 `response.data` 并返回
 - Unicode 转义字符（如 `\u793a`）会在 `json.loads()` 时自动解码为中文
-- 数据结构是 `data.song.list`，不是 `data.list`
 
 **输出变量**:
 
