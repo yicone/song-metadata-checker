@@ -186,13 +186,18 @@ def main(song_url: str) -> dict:
 **代码** (Python):
 
 ```python
-def main(netease_song_details: dict, netease_lyrics_data: dict) -> dict:
+import json
+from urllib.parse import quote
+
+def main(netease_song_details: str, netease_lyrics_data: str) -> dict:
     """
     构建基础元数据对象
     """
     try:
+        netease_song_dict = json.loads(netease_song_details)
+        netease_lyrics_dict = json.loads(netease_lyrics_data)
         # 提取歌曲信息
-        songs = netease_song_details.get('songs', [])
+        songs = netease_song_dict.get('songs', [])
         if not songs:
             return {
                 "metadata": {},
@@ -210,12 +215,21 @@ def main(netease_song_details: dict, netease_lyrics_data: dict) -> dict:
             "album": song.get('al', {}).get('name', ''),
             "cover_url": song.get('al', {}).get('picUrl', ''),
             "duration": song.get('dt', 0),
-            "lyrics": netease_lyrics_data.get('lrc', {}).get('lyric', ''),
+            "lyrics": netease_lyrics_dict.get('lrc', {}).get('lyric', ''),
             "source": "NetEase Cloud Music"
         }
         
+        # 构建搜索关键词（歌名 + 第一个艺术家）
+        search_key = metadata["song_title"]
+        if metadata["artists"]:
+            search_key += " " + metadata["artists"][0]
+        
         return {
             "metadata": metadata,
+            "song_title": metadata["song_title"],
+            "search_key": search_key,  # 用于 QQ Music 搜索
+            "artists": str(metadata["artists"]),
+            "album": metadata["album"],
             "success": True
         }
     
@@ -229,8 +243,17 @@ def main(netease_song_details: dict, netease_lyrics_data: dict) -> dict:
 
 **输出变量**:
 
-- `metadata` (Object)
+- `metadata` (Object) - 完整元数据对象
+- `song_title` (String) - 歌曲标题（平铺输出）
+- `search_key` (String) - 搜索关键词（歌名 + 艺术家，用于 QQ Music 搜索）
+- `artists` (String) - 艺术家列表 JSON 字符串
+- `album` (String) - 专辑名称
 - `success` (Boolean)
+
+**⚠️ 重要**:
+
+- Dify Cloud 不支持访问 Object 的嵌套属性（如 `metadata.song_title`），因此需要将常用字段平铺输出
+- `search_key` 包含歌名和艺术家，提高 QQ Music 搜索准确度
 
 ---
 
@@ -242,8 +265,14 @@ def main(netease_song_details: dict, netease_lyrics_data: dict) -> dict:
 **配置**:
 
 - **Method**: GET
-- **URL**: `{{env.QQ_MUSIC_API_HOST}}/search?key={{initial_data_structuring.metadata.song_title}} {{initial_data_structuring.metadata.artists[0]}}&pageSize=5`
+- **URL**: `{{env.QQ_MUSIC_API_HOST}}/search?key={{initial_data_structuring.search_key}}&pageSize=5`
 - **Timeout**: 10000ms
+
+**⚠️ 说明**:
+
+- 使用 `search_key` 变量（包含歌名 + 艺术家，提高搜索准确度）
+- Dify 会自动对 URL 参数进行编码，处理空格和特殊字符
+- 如果搜索无结果，可以改用仅 `song_title`
 
 **环境变量**:
 
@@ -263,32 +292,52 @@ def main(netease_song_details: dict, netease_lyrics_data: dict) -> dict:
 **输入变量**:
 
 - `search_results` → 来自 `qqmusic_search.body`
-- `target_title` → 来自 `initial_data_structuring.metadata.song_title`
-- `target_artists` → 来自 `initial_data_structuring.metadata.artists`
+- `target_title` → 来自 `initial_data_structuring.song_title`
+- `target_artists` → 来自 `initial_data_structuring.artists`
 
 **代码** (Python):
 
 ```python
-def main(search_results: dict, target_title: str, target_artists: list) -> dict:
+import json
+
+def main(search_results: str, target_title: str, target_artists: str) -> dict:
     """
     从搜索结果中找到最佳匹配
     """
     try:
+        # QQ Music API 返回的 body 是 JSON 字符串，需要解析
+        if isinstance(search_results, str):
+            search_data = json.loads(search_results)
+        else:
+            search_data = search_results
+        
+        # 调试：输出完整响应结构
+        print(f"QQ Music API 响应: {json.dumps(search_data, ensure_ascii=False, indent=2)}")
+        
         # 提取搜索结果列表
-        results = search_results.get('data', {}).get('list', [])
+        # 注意：QQ Music API 的数据结构是 response.data.song.list
+        results = search_data.get('response', {}).get('data', {}).get('song', {}).get('list', [])
+        
+        print(f"搜索结果数量: {len(results)}")
+        if results:
+            print(f"第一个结果: {json.dumps(results[0], ensure_ascii=False)}")
         
         if not results:
             return {
                 "match_id": "",
-                "match_found": False
+                "match_found": False,
+                "error": "搜索无结果",
+                "debug_data": search_data  # 调试：返回原始数据
             }
         
         # 简单匹配：取第一个结果
-        # TODO: 实现更复杂的匹配算法
+        # TODO: 实现更复杂的匹配算法（比较歌名和艺术家相似度）
         best_match = results[0]
         
         return {
             "match_id": best_match.get('songmid', ''),
+            "match_name": best_match.get('songname', ''),  # Unicode 会自动解码
+            "match_album": best_match.get('albumname', ''),
             "match_found": True
         }
     
@@ -300,9 +349,16 @@ def main(search_results: dict, target_title: str, target_artists: list) -> dict:
         }
 ```
 
+**⚠️ 重要**:
+
+- QQ Music API 的 `body` 是 JSON 字符串，需要 `json.loads()` 解析
+- Unicode 转义字符（如 `\u793a`）会在 `json.loads()` 时自动解码为中文
+- 数据结构是 `data.song.list`，不是 `data.list`
+
 **输出变量**:
 
 - `match_id` (String)
+- `match_name` (String)
 - `match_found` (Boolean)
 
 ---
@@ -354,11 +410,21 @@ def main(search_results: dict, target_title: str, target_artists: list) -> dict:
 **代码** (Python):
 
 ```python
-def main(netease_data: dict, qqmusic_data: dict = None) -> dict:
+import json
+
+def main(netease_data: dict, qqmusic_data: str = None) -> dict:
     """
     整合多源数据并生成核验报告
     """
     try:
+        # 解析 QQ Music 数据（如果是字符串）
+        qqmusic_parsed = None
+        if qqmusic_data:
+            if isinstance(qqmusic_data, str):
+                qqmusic_parsed = json.loads(qqmusic_data)
+            else:
+                qqmusic_parsed = qqmusic_data
+        
         fields = {}
         
         # 核验标题
@@ -369,8 +435,11 @@ def main(netease_data: dict, qqmusic_data: dict = None) -> dict:
             "source": "NetEase"
         }
         
-        if qqmusic_data:
-            qqmusic_title = qqmusic_data.get('data', {}).get('track_info', {}).get('name', '')
+        if qqmusic_parsed:
+            # 注意路径：response.songinfo.data.track_info
+            track_info = qqmusic_parsed.get('response', {}).get('songinfo', {}).get('data', {}).get('track_info', {})
+            qqmusic_title = track_info.get('name', '')
+            
             if qqmusic_title and qqmusic_title.lower() == netease_title.lower():
                 fields['title']['status'] = "确认"
                 fields['title']['confirmed_by'] = ["QQ Music"]
@@ -386,10 +455,11 @@ def main(netease_data: dict, qqmusic_data: dict = None) -> dict:
             "source": "NetEase"
         }
         
-        if qqmusic_data:
+        if qqmusic_parsed:
+            track_info = qqmusic_parsed.get('response', {}).get('songinfo', {}).get('data', {}).get('track_info', {})
             qqmusic_artists = [
                 s.get('name', '') 
-                for s in qqmusic_data.get('data', {}).get('track_info', {}).get('singer', [])
+                for s in track_info.get('singer', [])
             ]
             if qqmusic_artists and set(qqmusic_artists) == set(netease_artists):
                 fields['artists']['status'] = "确认"
@@ -407,7 +477,7 @@ def main(netease_data: dict, qqmusic_data: dict = None) -> dict:
             "metadata": {
                 "song_id": netease_data.get('song_id', ''),
                 "source": "NetEase Cloud Music",
-                "verified_with": ["QQ Music"] if qqmusic_data else []
+                "verified_with": ["QQ Music"] if qqmusic_parsed else []
             },
             "fields": fields,
             "summary": {
@@ -421,7 +491,8 @@ def main(netease_data: dict, qqmusic_data: dict = None) -> dict:
         
         return {
             "final_report": report,
-            "success": True
+            "success": True,
+            "error": ""  # 成功时返回空字符串
         }
     
     except Exception as e:
@@ -436,19 +507,21 @@ def main(netease_data: dict, qqmusic_data: dict = None) -> dict:
 
 - `final_report` (Object)
 - `success` (Boolean)
+- `error` (String) - 错误信息，成功时为空字符串
 
 ---
 
-### 步骤 12: 添加 Answer 节点
+### 步骤 12: 添加 End 节点
 
-**节点类型**: Answer  
+**节点类型**: End  
 **节点名称**: `end`
 
-**输出内容**:
+**输出变量**:
 
-```
-{{consolidate.final_report}}
-```
+- 添加输出变量: `final_report`
+- 值: `{{consolidate.final_report}}`
+
+**⚠️ 说明**: Dify Cloud 中没有 "Answer" 节点类型，使用 "End" 节点并配置输出变量。
 
 ---
 
@@ -523,16 +596,88 @@ GEMINI_API_BASE_URL=https://generativelanguage.googleapis.com/v1beta
 
 ### 选项 1: 使用 ngrok (临时测试)
 
+**⚠️ 问题**: ngrok 免费版只能同时暴露 1 个端口
+
+**解决方案 A: 使用 Nginx 反向代理（推荐）** ✅
+
 ```bash
-# 启动 NetEase API
+# 1. 创建 Nginx 配置
+cat > nginx.conf << 'EOF'
+events {
+    worker_connections 1024;
+}
+
+http {
+    server {
+        listen 8080;
+        
+        # NetEase API
+        location /netease/ {
+            proxy_pass http://localhost:3000/;
+        }
+        
+        # QQ Music API
+        location /qqmusic/ {
+            proxy_pass http://localhost:3001/;
+        }
+    }
+}
+EOF
+
+# 2. 启动 API 服务
 cd services/netease-api && docker-compose up -d
+cd ../qqmusic-api && docker-compose up -d
 
-# 使用 ngrok 暴露到公网
-ngrok http 3000
-# 复制 ngrok 提供的 HTTPS URL 到 NETEASE_API_HOST
+# 3. 启动 Nginx
+docker run -d -p 8080:8080 -v $(pwd)/nginx.conf:/etc/nginx/nginx.conf:ro nginx
 
-# 对 QQ Music API 重复相同操作
-ngrok http 3001
+# 4. 使用 ngrok 暴露 Nginx（只需一个端口）
+ngrok http 8080
+# 假设得到: https://abc123.ngrok.io
+```
+
+**在 Dify Cloud 中配置环境变量**:
+
+```bash
+NETEASE_API_HOST=https://abc123.ngrok.io/netease
+QQ_MUSIC_API_HOST=https://abc123.ngrok.io/qqmusic
+```
+
+**解决方案 B: 使用 ngrok 付费版**
+
+```bash
+# 付费版支持多个隧道
+ngrok http 3000 &
+ngrok http 3001 &
+```
+
+**解决方案 C: 使用免费的 Cloudflare Tunnel**
+
+```bash
+# 安装 cloudflared
+brew install cloudflare/cloudflare/cloudflared
+
+# 登录
+cloudflared tunnel login
+
+# 创建隧道
+cloudflared tunnel create music-api
+
+# 配置路由（支持多个服务）
+cat > config.yml << 'EOF'
+tunnel: <your-tunnel-id>
+credentials-file: /path/to/credentials.json
+
+ingress:
+  - hostname: netease.yourdomain.com
+    service: http://localhost:3000
+  - hostname: qqmusic.yourdomain.com
+    service: http://localhost:3001
+  - service: http_status:404
+EOF
+
+# 启动隧道
+cloudflared tunnel run music-api
 ```
 
 ### 选项 2: 部署到云服务器

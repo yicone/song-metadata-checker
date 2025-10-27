@@ -14,7 +14,7 @@ CORS(app)
 
 PORT = int(os.getenv('PORT', 3001))
 # Rain120/qq-music-api 的实际地址
-QQMUSIC_API_BASE = os.getenv('QQMUSIC_API_BASE', 'http://localhost:3300')
+QQMUSIC_API_BASE = os.getenv('QQMUSIC_API_BASE', 'http://localhost:3200')
 
 
 @app.route('/')
@@ -46,7 +46,8 @@ def search():
             return jsonify({'error': '缺少搜索关键词'}), 400
         
         # 转发到 Rain120 API
-        url = f"{QQMUSIC_API_BASE}/search/song"
+        # Rain120 使用 /getSearchByKey 端点
+        url = f"{QQMUSIC_API_BASE}/getSearchByKey"
         params = {
             'key': keyword,
             'pageSize': page_size,
@@ -70,7 +71,7 @@ def search():
 @app.route('/song')
 def get_song():
     """
-    获取歌曲详情（代理到 Rain120 API）
+    获取歌曲详情
     参数:
         songmid: 歌曲 MID
     """
@@ -81,7 +82,8 @@ def get_song():
             return jsonify({'error': '缺少歌曲 MID'}), 400
         
         # 转发到 Rain120 API
-        url = f"{QQMUSIC_API_BASE}/song"
+        # Rain120 使用 /getSongInfo 端点
+        url = f"{QQMUSIC_API_BASE}/getSongInfo"
         params = {'songmid': songmid}
         
         response = requests.get(url, params=params, timeout=10)

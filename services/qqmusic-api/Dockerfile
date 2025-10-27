@@ -16,4 +16,6 @@ COPY . .
 EXPOSE 3001
 
 # 启动服务
-CMD ["python", "server.py"]
+# 使用 server-proxy.py 转发到真实的 QQ 音乐 API
+# 或使用 server.py 返回 mock 数据（仅用于测试）
+CMD ["python", "server-proxy.py"]
