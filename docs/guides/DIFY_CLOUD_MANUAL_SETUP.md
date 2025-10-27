@@ -248,6 +248,9 @@ def main(netease_song_details: str, netease_lyrics_data: str) -> dict:
             "search_key": search_key,  # 用于 QQ Music 搜索
             "artists": str(metadata["artists"]),
             "album": metadata["album"],
+            "duration": metadata["duration"],
+            "cover_art_url": metadata["cover_url"],
+            "lyrics": metadata["lyrics"],
             "success": True
         }
 
@@ -266,6 +269,9 @@ def main(netease_song_details: str, netease_lyrics_data: str) -> dict:
 - `search_key` (String) - 搜索关键词（歌名 + 艺术家，用于 QQ Music 搜索）
 - `artists` (String) - 艺术家列表 JSON 字符串
 - `album` (String) - 专辑名称
+- `duration` (Number) - 歌曲时长（毫秒）
+- `cover_art_url` (String) - 封面图 URL
+- `lyrics` (String) - 歌词
 - `success` (Boolean)
 
 **⚠️ 重要**:
@@ -643,7 +649,7 @@ def main(cover_response: str) -> dict:
       {
         "inline_data": {
           "mime_type": "image/jpeg",
-          "data": "{{initial_data_structuring.metadata.cover_url}}"
+          "data": "{{initial_data_structuring.cover_art_url}}"
         }
       },
       {
