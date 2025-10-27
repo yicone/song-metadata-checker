@@ -60,3 +60,7 @@ dump.rdb
 
 # Dify workflow bundled file (auto-generated)
 dify-workflow/*-bundle.yml
+
+# AI CLI and script backups
+*.md.backup
+*.sh.backup
