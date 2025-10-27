@@ -109,12 +109,14 @@ pnpm lint:md
 
 **Checks**:
 
+- File naming conventions
+- Basic markdown structure
 - Documentation consistency
 - SSOT compliance
-- Cross-references accuracy
-- Authority document mappings
 
 **Default**: Enabled (runs automatically)
+
+**Note**: This uses the [Standardized Documentation System](../../.windsurf/STANDARD_DOC_SYSTEM.md) which is designed for cross-project reuse.
 
 ## Usage
 
