@@ -52,3 +52,6 @@ temp/
 
 # Redis dump
 dump.rdb
+
+# Documentation standards backups
+.doc-standards-backup-*
