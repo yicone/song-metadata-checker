@@ -5,7 +5,7 @@
 ## 📋 目录
 
 - [前置条件](#前置条件)
-- [选择工作流版本](#选择工作流版本)
+- [工作流文件](#工作流文件)
 - [导入工作流](#导入工作流)
 - [配置环境变量](#配置环境变量)
 - [测试工作流](#测试工作流)
@@ -52,41 +52,25 @@ docker-compose up -d
 
 ---
 
-## 选择工作流版本
-
-### 标准版 (推荐用于国际用户)
+## 工作流文件
 
 **文件**: `dify-workflow/music-metadata-checker.yml`
 
-**特点**：
+**核验源状态**：
 
-- 使用 Spotify API（官方 API，稳定）
-- 需要 OAuth 认证
-- 适合国际音乐平台
-
-**必需 API**：
-
-- ✅ NetEase Cloud Music API
-- ✅ Google Gemini API
-- ✅ Spotify API
-- ⏭️ QQ Music API (可选)
-
-### 简化版 (推荐用于中国市场)
-
-**文件**: `dify-workflow/music-metadata-checker-simple.yml`
-
-**特点**：
-
-- 使用 QQ 音乐 API（社区 API）
-- 无需 OAuth 认证
-- 适合中国音乐平台
+- ✅ **QQ Music**: 当前启用（必需）
+- ⏭️ **Spotify**: 可选，当前禁用（调试优先级低）
 
 **必需 API**：
 
-- ✅ NetEase Cloud Music API
-- ✅ Google Gemini API
-- ✅ QQ Music API
-- ⏭️ Spotify API (可选)
+- ✅ NetEase Cloud Music API（数据源）
+- ✅ Google Gemini API（OCR，可选）
+- ✅ QQ Music API（核验源）
+
+**可选 API**：
+
+- ⏭️ Spotify API（可选核验源，当前禁用）
+- 参考 [启用 Spotify](WORKFLOW_OVERVIEW.md#enabling-spotify-validation)
 
 ---
 
@@ -119,9 +103,7 @@ docker-compose up -d
 
 1. 在工作流编辑器中，点击右上角的 **"导入"** 或 **"Import"**
 2. 选择 **"导入 DSL"** 或 **"Import DSL"**
-3. 上传文件：
-   - 标准版：`dify-workflow/music-metadata-checker.yml`
-   - 简化版：`dify-workflow/music-metadata-checker-simple.yml`
+3. 上传文件：`dify-workflow/music-metadata-checker.yml`
 4. 点击 **"确认导入"**
 
 **如果导入失败**：参考 [Dify Cloud 手动创建指南](DIFY_CLOUD_MANUAL_SETUP.md)
@@ -134,10 +116,7 @@ docker-compose up -d
 - ✅ 节点之间有连接线
 - ✅ 开始节点和结束节点存在
 
-**节点数量**：
-
-- 标准版：约 20-25 个节点
-- 简化版：约 18-22 个节点
+**节点数量**：约 12-15 个节点（不含 Spotify 节点）
 
 ---
 

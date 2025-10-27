@@ -1,7 +1,13 @@
 name: "音乐元数据核验工作流"
 type: "workflow"
-description: "自动化音乐歌曲上架与核验工作流 - 从网易云音乐提取元数据并通过多源交叉验证"
-version: "1.0.0"
+description: "使用网易云音乐和 QQ 音乐进行元数据核验，可选启用 Spotify"
+version: "1.2.0"
+
+# Spotify 集成状态
+# - 当前状态: 禁用（调试优先级低）
+# - 架构支持: 预留接口，可随时启用并行核验
+# - 启用方式: 添加 Spotify 节点并修改 normalize_data 输入
+# - 详细说明: 参考 docs/guides/WORKFLOW_OVERVIEW.md#enabling-spotify-validation
 
 # 工作流输入变量
 inputs:
@@ -80,7 +86,7 @@ nodes:
           type: "boolean"
     dependencies: ["netease_song_detail", "netease_lyric"]
 
-  # ========== 阶段二：OCR 提取 ==========
+  # ========== 阶段二：OCR 提取（可选）==========
 
   - id: "gemini_ocr"
     type: "http-request"
@@ -112,77 +118,57 @@ nodes:
         - name: "success"
           type: "boolean"
     dependencies: ["gemini_ocr"]
+    condition:
+      type: "if"
+      expression: "{{gemini_ocr.success}} == true"
 
-  # ========== 阶段三：多源核验 ==========
+  # ========== 阶段三：QQ 音乐核验 ==========
 
-  # Spotify 认证与搜索
-  - id: "spotify_auth"
+  - id: "qqmusic_search"
     type: "http-request"
-    title: "Spotify OAuth 认证"
-    config_file: "nodes/http-nodes/spotify_auth.json"
-    dependencies: ["parse_ocr_json"]
-
-  - id: "spotify_search"
-    type: "http-request"
-    title: "Spotify 搜索"
-    config_file: "nodes/http-nodes/spotify_search.json"
+    title: "QQ 音乐搜索"
+    config_file: "nodes/http-nodes/qqmusic_search.json"
     inputs:
-      - variable: "spotify_auth.spotify_access_token"
-        name: "spotify_access_token"
       - variable: "initial_data_structuring.metadata.song_title"
         name: "song_title"
       - variable: "initial_data_structuring.metadata.artists[0]"
         name: "artist_name"
-    dependencies: ["spotify_auth"]
+    dependencies: ["parse_ocr_json"]
 
-  - id: "find_spotify_match"
+  - id: "find_qqmusic_match"
     type: "code"
-    title: "找到 Spotify 匹配"
+    title: "找到 QQ 音乐匹配"
     description: "从搜索结果中找到最佳匹配"
     config:
       code_language: "python3"
       code_file: "nodes/code-nodes/find_match.py"
       inputs:
-        - variable: "spotify_search.spotify_search_results"
+        - variable: "qqmusic_search.qqmusic_search_results"
           name: "search_results"
         - variable: "initial_data_structuring.metadata.song_title"
           name: "target_title"
         - variable: "initial_data_structuring.metadata.artists"
           name: "target_artists"
-        - value: "spotify"
+        - value: "qqmusic"
           name: "platform"
       outputs:
         - name: "match_id"
           type: "string"
         - name: "match_found"
           type: "boolean"
-    dependencies: ["spotify_search"]
+    dependencies: ["qqmusic_search"]
 
-  - id: "spotify_track_details"
+  - id: "qqmusic_song_detail"
     type: "http-request"
-    title: "获取 Spotify 曲目详情"
-    config_file: "nodes/http-nodes/spotify_track_details.json"
+    title: "获取 QQ 音乐歌曲详情"
+    config_file: "nodes/http-nodes/qqmusic_song_detail.json"
     inputs:
-      - variable: "spotify_auth.spotify_access_token"
-        name: "spotify_access_token"
-      - variable: "find_spotify_match.match_id"
-        name: "spotify_track_id"
-    dependencies: ["find_spotify_match"]
+      - variable: "find_qqmusic_match.match_id"
+        name: "qqmusic_song_id"
+    dependencies: ["find_qqmusic_match"]
     condition:
       type: "if"
-      expression: "{{find_spotify_match.match_found}} == true"
-
-  # 封面图比对
-  - id: "gemini_image_compare"
-    type: "http-request"
-    title: "Gemini 封面图比对"
-    config_file: "nodes/http-nodes/gemini_image_compare.json"
-    inputs:
-      - variable: "initial_data_structuring.metadata.cover_art_url"
-        name: "netease_cover_url"
-      - variable: "spotify_track_details.spotify_track_data.album.images[0].url"
-        name: "spotify_cover_url"
-    dependencies: ["spotify_track_details"]
+      expression: "{{find_qqmusic_match.match_found}} == true"
 
   # ========== 阶段四：数据整合 ==========
 
@@ -196,14 +182,14 @@ nodes:
       inputs:
         - variable: "parse_ocr_json.metadata"
           name: "netease_data"
-        - variable: "spotify_track_details.spotify_track_data"
+        - value: ""  # Spotify 当前禁用，启用时改为 spotify_song_detail.body
           name: "spotify_data"
-        - value: ""
+        - variable: "qqmusic_song_detail.qqmusic_song_data"
           name: "qqmusic_data"
       outputs:
         - name: "normalized_data"
           type: "object"
-    dependencies: ["spotify_track_details", "gemini_image_compare"]
+    dependencies: ["qqmusic_song_detail"]
 
   - id: "consolidate"
     type: "code"
@@ -215,7 +201,7 @@ nodes:
       inputs:
         - variable: "normalize_data.normalized_data"
           name: "normalized_data"
-        - variable: "gemini_image_compare.cover_match_result"
+        - value: ""
           name: "cover_match_result"
       outputs:
         - name: "final_report"
@@ -241,37 +227,43 @@ error_handling:
     - node_id: "gemini_ocr"
       action: "continue"
       message: "OCR 提取失败，继续使用基础数据"
-    - node_id: "spotify_search"
+    - node_id: "qqmusic_search"
       action: "continue"
-      message: "Spotify 搜索失败，跳过 Spotify 核验"
-    - node_id: "gemini_image_compare"
-      action: "continue"
-      message: "封面图比对失败，跳过封面核验"
+      message: "QQ 音乐搜索失败，跳过 QQ 音乐核验"
 
 # 环境变量配置
 environment:
   required_variables:
     - GEMINI_API_KEY
     - GEMINI_API_BASE_URL
+    - NETEASE_API_HOST
+    - QQ_MUSIC_API_HOST
+  optional_variables:  # 启用 Spotify 时需要
     - SPOTIFY_CLIENT_ID
     - SPOTIFY_CLIENT_SECRET
     - SPOTIFY_AUTH_URL
     - SPOTIFY_API_BASE_URL
-    - NETEASE_API_HOST
 
 # 性能配置
 performance:
-  timeout: 120000  # 总超时时间 120 秒
+  timeout: 90000  # 总超时时间 90 秒
   max_retries: 3
-  parallel_execution: false  # 当前版本顺序执行，未来可优化为并行
+  parallel_execution: false
 
 # 元数据
 metadata:
   author: "Music Metadata Checker Team"
   created_at: "2025-01-26"
+  updated_at: "2025-10-27"
+  version: "1.2.0"
   tags:
     - "music"
     - "metadata"
     - "verification"
-    - "dify"
-    - "workflow"
+    - "netease"
+    - "qqmusic"
+    - "spotify-optional"
+  notes:
+    - "Spotify integration supported but currently disabled"
+    - "QQ Music provides primary validation for Chinese market"
+    - "See docs/guides/WORKFLOW_OVERVIEW.md for enabling Spotify"

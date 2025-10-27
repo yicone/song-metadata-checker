@@ -3,6 +3,12 @@
 Technical architecture and workflow details for the Music Metadata Verification System.
 
 > **Authority**: This is the authoritative technical documentation for system architecture.
+>
+> **📌 Validation Sources**:
+>
+> - **QQ Music**: Active (required)
+> - **Spotify**: Optional, currently disabled (debugging priority: low)
+> - Architecture supports enabling Spotify for parallel validation when needed
 
 ## 📋 Table of Contents
 
@@ -58,8 +64,10 @@ External APIs                Workflow Engine           Data Processing
 NetEase API    ────────┐
                        │
 QQ Music API   ────────┼──→  HTTP Nodes  ──→  Code Nodes  ──→  Output
+(Active)               │
                        │
-Spotify API    ────────┤
+Spotify API    ────────┤  [Optional, Currently Disabled]
+(Disabled)             │
                        │
 Gemini API     ────────┘
 ```
@@ -102,31 +110,32 @@ Gemini API     ────────┘
 
 ---
 
-### Stage 3: Multi-Source Validation (5-8 seconds)
+### Stage 3: Multi-Source Validation (2-5 seconds)
 
 **Purpose**: Cross-validate metadata with independent sources
 
-**Parallel Branches**:
+**Active Validation Sources**:
 
-**Branch A: Spotify** (Optional)
+**QQ Music** (Required, Active)
+
+1. **QQ Music Search** - Find matching song using combined search key
+2. **Find Best Match** - Select most relevant result from search results
+3. **QQ Music Details** - Get full song metadata (conditional on match found)
+
+**Optional Validation Sources** (Currently Disabled):
+
+**Spotify** (Optional, Disabled)
 
 1. **Spotify Auth** - OAuth token acquisition
 2. **Spotify Search** - Find matching track
 3. **Find Best Match** - Select most relevant result
 4. **Spotify Details** - Get full track metadata
 
-**Branch B: QQ Music** (Required)
+**Status**: Spotify nodes are architecturally supported but currently disabled (debugging priority: low)
 
-1. **QQ Music Search** - Find matching song
-2. **Find Best Match** - Select most relevant result
-3. **QQ Music Details** - Get full song metadata
+**When Enabled**: Can run in parallel with QQ Music validation
 
-**Branch C: Cover Comparison**
-
-1. **Gemini Vision** - Compare album covers
-2. **Parse Comparison** - Extract similarity score
-
-**Output**: Validation data from multiple sources
+**Output**: Validation data from active sources (currently QQ Music only)
 
 **Error Handling**: Continues with available sources
 
@@ -261,7 +270,11 @@ Gemini API     ────────┘
 
 ---
 
-#### Spotify
+#### Spotify (Optional, Currently Disabled)
+
+> **Status**: Spotify integration is architecturally supported but currently disabled.
+> **Reason**: Debugging priority is low; QQ Music provides sufficient validation for current needs.
+> **Enable**: See "Enabling Spotify Validation" section below.
 
 **Endpoint**: `/api/token`
 
@@ -481,21 +494,31 @@ Complete workflow with partial results
 
 ### Execution Time
 
-**Typical Execution**: 10-15 seconds
+**Current Configuration** (QQ Music only): 8-12 seconds
 
 **Breakdown**:
 
 - Data Extraction: 2-3s
 - OCR (if enabled): 3-5s
-- Validation: 5-8s
+- QQ Music Validation: 2-3s
+- Consolidation: 1-2s
+
+**With Spotify Enabled** (parallel execution): 10-15 seconds
+
+**Breakdown**:
+
+- Data Extraction: 2-3s
+- OCR (if enabled): 3-5s
+- Parallel Validation (QQ Music + Spotify): 5-8s
 - Consolidation: 1-2s
 
 ### Optimization Opportunities
 
-1. **Parallel API Calls**: Execute Spotify and QQ Music searches simultaneously
-2. **Caching**: Cache search results for frequently queried songs
-3. **Lazy Loading**: Skip optional validations if confidence is already high
-4. **Request Batching**: Batch multiple song queries if supported by APIs
+1. **Enable Spotify Validation**: Add Spotify as parallel validation source for international music
+2. **Parallel API Calls**: When Spotify is enabled, execute Spotify and QQ Music searches simultaneously
+3. **Caching**: Cache search results for frequently queried songs
+4. **Lazy Loading**: Skip optional validations if confidence is already high
+5. **Request Batching**: Batch multiple song queries if supported by APIs
 
 ### Resource Usage
 
@@ -507,14 +530,63 @@ Complete workflow with partial results
 
 ---
 
+## Enabling Spotify Validation
+
+**Current Status**: Spotify validation is architecturally supported but disabled.
+
+**Why Disabled**: Debugging priority is low; QQ Music provides sufficient validation for Chinese market music.
+
+### Steps to Enable
+
+1. **Add Environment Variables** (in Dify workflow settings):
+
+   ```bash
+   SPOTIFY_CLIENT_ID=your_spotify_client_id
+   SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+   SPOTIFY_AUTH_URL=https://accounts.spotify.com/api/token
+   SPOTIFY_API_BASE_URL=https://api.spotify.com/v1
+   ```
+
+2. **Add Spotify Nodes** to workflow:
+   - Spotify Auth node (HTTP Request)
+   - Spotify Search node (HTTP Request)
+   - Find Spotify Match node (Code)
+   - Spotify Song Detail node (HTTP Request)
+
+3. **Update normalize_data Node**:
+   - Change `spotify_data` input from empty value to `spotify_song_detail.body`
+
+4. **Enable Parallel Execution** (optional):
+   - In workflow settings, enable parallel branches for QQ Music and Spotify
+
+5. **Test**:
+   - Verify Spotify API credentials
+   - Test with international music tracks
+   - Validate parallel execution performance
+
+### Expected Benefits
+
+- Cross-validation with international music database
+- Better accuracy for non-Chinese music
+- Parallel execution reduces total validation time
+
+### Trade-offs
+
+- Increased execution time (if not parallel): +3-5 seconds
+- Additional API costs (Spotify rate limits)
+- More complex error handling
+
+---
+
 ## Related Documentation
 
 - [Functional Specification](../FUNCTIONAL_SPEC.md) - Feature details
 - [Deployment Guide](DEPLOYMENT.md) - Setup instructions
 - [API Integration](QQMUSIC_API_SETUP.md) - API configuration
+- [Dify Cloud Manual Setup](DIFY_CLOUD_MANUAL_SETUP.md) - Cloud deployment guide
 
 ---
 
-**Last Updated**: 2025-10-26  
+**Last Updated**: 2025-10-27  
 **Maintained By**: [documentation-agent]  
 **Review Frequency**: Monthly

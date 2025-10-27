@@ -57,7 +57,7 @@ Spotify API (可选): ❌ 失败 (未配置，符合预期)
 
 1. **导入 Dify 工作流**
    - 登录 Dify 平台
-   - 导入 `dify-workflow/music-metadata-checker-simple.yml`
+   - 导入 `dify-workflow/music-metadata-checker.yml`
    - 配置环境变量
    - 测试工作流
 
@@ -114,8 +114,7 @@ song-metadata-checker/
 │   │   └── WORKFLOW_OVERVIEW.md    # 工作流详解
 │   └── archive/                 # 归档文档
 ├── dify-workflow/               # Dify 工作流 ✅
-│   ├── music-metadata-checker.yml        # 标准版
-│   ├── music-metadata-checker-simple.yml # 简化版
+│   ├── music-metadata-checker.yml        # 工作流配置 (Spotify 可选)
 │   └── nodes/                   # 节点配置
 ├── services/                    # 外部服务 ✅
 │   ├── netease-api/            # 网易云 API (运行中)

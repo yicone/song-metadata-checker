@@ -1,6 +1,12 @@
-# Dify Cloud 手动创建工作流指南
+# Dify Cloud 手动配置指南
 
-> **重要**: 由于 Dify Cloud 无法导入包含外部文件引用的 YAML，需要手动创建工作流。
+> **目标受众**: 需要手动配置 Dify Cloud 工作流的用户
+>
+> **前置条件**: 已有 Dify Cloud 账号，已部署 API 服务
+> **核验源状态**:
+>
+> - **QQ 音乐**: 当前启用（必需）
+> - **Spotify**: 可选，当前禁用（调试优先级低）
 
 ## 📋 问题说明
 
@@ -41,14 +47,14 @@
 
 ---
 
-## 📝 工作流创建（简化版）
+## 📝 工作流创建
 
 ### 步骤 1: 创建新工作流
 
 1. 登录 [Dify Cloud](https://cloud.dify.ai/)
-2. 点击 **"创建应用"** → **"工作流"**
-3. 应用名称: `音乐元数据核验工作流 (简化版)`
-4. 描述: `使用网易云音乐和 QQ 音乐进行元数据核验`
+2. 点击 **“创建应用”** → **“工作流”**
+3. 应用名称: `音乐元数据核验工作流`
+4. 描述: `使用网易云音乐和 QQ 音乐进行元数据核验，可选启用 Spotify`
 
 ---
 
@@ -698,6 +704,68 @@ cloudflared tunnel run music-api
 ### 选项 3: 使用 Railway/Render 等 PaaS
 
 更简单的部署方式，自动提供 HTTPS 域名。
+
+---
+
+## 🔧 可选功能：启用 Spotify 核验
+
+**当前状态**: Spotify 节点已预留但未启用
+
+**为什么暂不启用**:
+
+- 调试优先级较低
+- QQ 音乐已能满足中国市场音乐核验需求
+- 可在需要时随时启用
+
+### 如何启用
+
+#### 1. 添加环境变量
+
+在 Dify Cloud 工作流设置中添加：
+
+```bash
+# Spotify API (可选)
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+SPOTIFY_AUTH_URL=https://accounts.spotify.com/api/token
+SPOTIFY_API_BASE_URL=https://api.spotify.com/v1
+```
+
+#### 2. 添加 Spotify 节点
+
+参考 `docs/guides/WORKFLOW_OVERVIEW.md#enabling-spotify-validation` 中的详细步骤。
+
+**需要添加的节点**：
+
+1. **Spotify Auth** (HTTP Request) - OAuth 认证
+2. **Spotify Search** (HTTP Request) - 搜索歌曲
+3. **Find Spotify Match** (Code) - 找到最佳匹配
+4. **Spotify Song Detail** (HTTP Request) - 获取详情
+
+#### 3. 修改 normalize_data 节点
+
+将 `spotify_data` 输入从空值改为：
+
+```python
+- variable: "spotify_song_detail.body"
+  name: "spotify_data"
+```
+
+#### 4. 启用并行执行（可选）
+
+在工作流设置中，启用 QQ 音乐和 Spotify 的并行分支。
+
+### 预期效果
+
+- 与国际音乐数据库交叉核验
+- 提高非中文音乐的准确性
+- 并行执行减少总核验时间
+
+### 权衡
+
+- 增加执行时间（如果不并行）：+3-5 秒
+- 额外的 API 成本（Spotify 限流）
+- 更复杂的错误处理
 
 ---
 

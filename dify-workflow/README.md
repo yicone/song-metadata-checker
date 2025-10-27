@@ -4,10 +4,15 @@
 
 ## 📁 工作流文件
 
-| 文件                                | 版本   | 适用场景 | 必需 API       |
-| ----------------------------------- | ------ | -------- | -------------- |
-| `music-metadata-checker.yml`        | 标准版 | 国际用户 | Spotify (官方) |
-| `music-metadata-checker-simple.yml` | 简化版 | 中国市场 | QQ 音乐 (社区) |
+**文件**: `music-metadata-checker.yml`
+
+**核验源状态**:
+
+- ✅ **QQ Music**: 当前启用（必需）
+- ⏭️ **Spotify**: 可选，当前禁用（调试优先级低）
+
+**必需 API**: NetEase Cloud Music, Google Gemini, QQ Music  
+**可选 API**: Spotify (参考 [启用指南](../docs/guides/WORKFLOW_OVERVIEW.md#enabling-spotify-validation))
 
 ## 🚀 快速导入
 
