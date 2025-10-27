@@ -16,15 +16,27 @@
 
 ## 🚀 快速导入
 
-```bash
-# 1. 验证 API 服务
-poetry run python scripts/validate_apis.py
+### 方式 1: 使用打包文件（推荐）
 
-# 2. 在 Dify 平台导入 .yml 文件
+```bash
+# 1. 构建自包含的 YML 文件
+poetry run python scripts/build_dify_bundle.py
+
+# 2. 在 Dify Cloud 导入
+#    上传: music-metadata-checker-bundle.yml
+
 # 3. 配置环境变量
 ```
 
-[📖 完整设置指南 →](../docs/guides/DIFY_WORKFLOW_SETUP.md)
+### 方式 2: 手动配置
+
+参考 [DIFY_CLOUD_MANUAL_SETUP.md](../docs/guides/DIFY_CLOUD_MANUAL_SETUP.md) 逐步创建节点。
+
+---
+
+**⚠️ 重要**: Dify Cloud 导入需要**自包含的 YML 文件**（所有代码内嵌）。本目录采用模块化结构便于开发，使用构建脚本生成可导入的打包文件。
+
+📖 [打包构建指南 →](BUILD_GUIDE.md)
 
 ## 🔧 节点配置
 

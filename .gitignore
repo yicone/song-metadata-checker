@@ -57,3 +57,6 @@ dump.rdb
 
 # Documentation standards backups
 .doc-standards-backup-*
+
+# Dify workflow bundled file (auto-generated)
+dify-workflow/*-bundle.yml
