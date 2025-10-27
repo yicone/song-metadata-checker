@@ -69,7 +69,7 @@ QQ_MUSIC_API_HOST=https://abc123.ngrok.io/qqmusic
 
 #### 3.3 创建节点
 
-按照 [完整手动创建指南](DIFY_CLOUD_MANUAL_SETUP.md) 创建以下节点：
+按照 [完整手动创建指南](../../dify-workflow/BUILD_GUIDE.md) 创建以下节点：
 
 **简化版流程**（推荐首次使用）:
 
@@ -133,7 +133,7 @@ return {
 
 ## 📚 下一步
 
-- **完整功能**: 参考 [完整手动创建指南](DIFY_CLOUD_MANUAL_SETUP.md) 添加 OCR 等功能
+- **完整功能**: 参考 [完整手动创建指南](../../dify-workflow/BUILD_GUIDE.md) 添加 OCR 等功能
 - **问题排查**: 查看 [故障排除指南](DIFY_CLOUD_TROUBLESHOOTING.md)
 - **生产部署**: 考虑 [云服务器部署](DEPLOYMENT.md)
 

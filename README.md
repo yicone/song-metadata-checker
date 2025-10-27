@@ -30,13 +30,38 @@
 
 ## 🚀 快速开始
 
-**3 步快速部署**:
+### 方式 1: 使用 Bundle 文件导入（推荐）⭐
 
-1. 启动 API 服务
-2. 配置环境变量
-3. 导入 Dify 工作流
+1. **准备 API 服务**
 
-[📖 5分钟快速开始 →](docs/QUICKSTART.md) | [📖 完整部署指南 →](docs/guides/DEPLOYMENT.md)
+   ```bash
+   # 启动 NetEase 和 QQ Music API
+   cd services && docker-compose up -d
+   ```
+
+2. **导入工作流到 Dify**
+   - 在 Dify Cloud 选择「导入 DSL 文件」
+   - 上传 `dify-workflow/music-metadata-checker-bundle.yml`
+   - 配置环境变量（见下方）
+
+3. **配置环境变量**
+
+   ```bash
+   NETEASE_API_HOST=https://your-netease-api.com
+   QQ_MUSIC_API_HOST=https://your-qqmusic-api.com
+   GEMINI_API_KEY=your_gemini_api_key
+   GEMINI_API_BASE_URL=https://generativelanguage.googleapis.com/v1beta
+   ```
+
+4. **测试工作流**
+   - 输入: `{"song_url": "https://music.163.com#/song?id=2758218600"}`
+   - 验证输出包含完整的元数据和核验结果
+
+[📖 Bundle 构建指南 →](dify-workflow/BUILD_GUIDE.md) | [📖 完整部署指南 →](docs/guides/DEPLOYMENT.md)
+
+### 方式 2: 传统部署
+
+[📖 5分钟快速开始 →](docs/QUICKSTART.md)
 
 ## 📁 项目结构
 

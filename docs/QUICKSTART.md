@@ -50,7 +50,7 @@ docker-compose up -d
 
 **Import workflow / 导入工作流**:
 
-- **Dify Cloud**: Use [manual setup guide](guides/DIFY_CLOUD_MANUAL_SETUP.md) (YAML import not supported)
+- **Dify Cloud**: Use [manual setup guide](guides/../../dify-workflow/BUILD_GUIDE.md) (YAML import not supported)
 - **Self-hosted Dify**: Import `dify-workflow/music-metadata-checker.yml`
 
 **Test / 测试**:

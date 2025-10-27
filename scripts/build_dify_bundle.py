@@ -22,6 +22,84 @@ def load_code_file(file_path: Path) -> str:
         return f.read()
 
 
+def inline_models_import(code: str, models_file: Path) -> str:
+    """
+    将 'from models import ...' 替换为 models.py 的实际内容
+
+    Args:
+        code: 原始代码
+        models_file: models.py 文件路径
+
+    Returns:
+        处理后的代码，models.py 内容已内联
+    """
+    import re
+
+    # 检查是否有 from models import
+    if "from models import" not in code:
+        return code
+
+    # 读取 models.py 内容
+    if not models_file.exists():
+        print("    ⚠️  警告: models.py 不存在，无法内联")
+        return code
+
+    models_content = load_code_file(models_file)
+
+    # 提取 models.py 中的导入语句（需要保留）
+    models_imports = []
+    for line in models_content.split("\n"):
+        if line.strip().startswith("from ") or line.strip().startswith("import "):
+            if "models" not in line:  # 排除自引用
+                models_imports.append(line)
+
+    # 提取 models.py 中的实际代码（去除文档字符串和导入）
+    lines = models_content.split("\n")
+    code_lines = []
+    in_docstring = False
+    _skip_next = False
+
+    for i, line in enumerate(lines):
+        # 跳过文件开头的文档字符串
+        if i < 10 and '"""' in line:
+            if in_docstring:
+                in_docstring = False
+                continue
+            else:
+                in_docstring = True
+                continue
+        if in_docstring:
+            continue
+
+        # 跳过导入语句
+        if line.strip().startswith("from ") or line.strip().startswith("import "):
+            continue
+
+        # 保留其他代码
+        if line.strip():  # 非空行
+            code_lines.append(line)
+
+    models_code = "\n".join(code_lines)
+
+    # 在原代码中找到 from models import 的位置
+    import_pattern = r"from models import [^\n]+"
+    match = re.search(import_pattern, code)
+
+    if match:
+        # 构建替换内容
+        replacement = f"""# ===== Inlined from models.py =====
+{chr(10).join(models_imports)}
+
+{models_code}
+# ===== End of models.py =====
+"""
+        # 替换导入语句
+        code = re.sub(import_pattern, replacement, code)
+        print("    ✅ 已内联 models.py")
+
+    return code
+
+
 def load_http_config(file_path: Path) -> Dict[str, Any]:
     """读取 HTTP 节点配置文件"""
     with open(file_path, "r", encoding="utf-8") as f:
@@ -37,6 +115,11 @@ def process_code_node(node: Dict[str, Any], base_dir: Path) -> Dict[str, Any]:
             if code_file_path.exists():
                 # 读取代码文件内容
                 code_content = load_code_file(code_file_path)
+
+                # 处理 models.py 导入
+                models_file = base_dir / "nodes" / "code-nodes" / "models.py"
+                code_content = inline_models_import(code_content, models_file)
+
                 # 替换 code_file 为 code
                 del config["code_file"]
                 config["code"] = code_content

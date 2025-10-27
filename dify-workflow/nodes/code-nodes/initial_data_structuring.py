@@ -11,78 +11,64 @@
 """
 
 import json
+from models import InitialDataStructuringOutput
 
 
-def main(netease_song_details: str, netease_lyrics_data: str) -> dict:
+def main(netease_song_detail: str, netease_lyric: str) -> InitialDataStructuringOutput:
     """
     从网易云音乐 API 响应中提取并结构化元数据
     """
     try:
         # 解析 JSON 响应
-        song_data = json.loads(netease_song_details)
-        lyrics_data = json.loads(netease_lyrics_data)
-        
+        song_data = json.loads(netease_song_detail)
+        lyrics_data = json.loads(netease_lyric)
+
         # 提取歌曲信息
-        songs = song_data.get('songs', [])
+        songs = song_data.get("songs", [])
         if not songs:
-            return {
-                'metadata': None,
-                'success': False,
-                'error': '未找到歌曲信息'
-            }
-        
+            return {"metadata": None, "success": False, "error": "未找到歌曲信息"}
+
         song = songs[0]
-        
+
         # 提取歌手信息
-        artists = song.get('ar', [])
-        artist_names = [artist.get('name', '') for artist in artists]
-        
+        artists = song.get("ar", [])
+        artist_names = [artist.get("name", "") for artist in artists]
+
         # 提取专辑信息
-        album = song.get('al', {})
-        
+        album = song.get("al", {})
+
         # 提取歌词
-        lrc = lyrics_data.get('lrc', {})
-        lyric_text = lrc.get('lyric', '')
-        
+        lrc = lyrics_data.get("lrc", {})
+        lyric_text = lrc.get("lyric", "")
+
         # 提取翻译歌词（如果有）
-        tlyric = lyrics_data.get('tlyric', {})
-        translated_lyric = tlyric.get('lyric', '')
-        
+        tlyric = lyrics_data.get("tlyric", {})
+        translated_lyric = tlyric.get("lyric", "")
+
         # 构建结构化元数据
         metadata = {
-            'song_id': str(song.get('id', '')),
-            'song_title': song.get('name', ''),
-            'artists': artist_names,
-            'album_name': album.get('name', ''),
-            'album_id': str(album.get('id', '')),
-            'cover_art_url': album.get('picUrl', ''),
-            'lyrics': {
-                'original': lyric_text,
-                'translated': translated_lyric
-            },
-            'duration_ms': song.get('dt', 0),
-            'publish_time': album.get('publishTime', 0),
+            "song_id": str(song.get("id", "")),
+            "song_title": song.get("name", ""),
+            "artists": artist_names,
+            "album_name": album.get("name", ""),
+            "album_id": str(album.get("id", "")),
+            "cover_art_url": album.get("picUrl", ""),
+            "lyrics": {"original": lyric_text, "translated": translated_lyric},
+            "duration_ms": song.get("dt", 0),
+            "publish_time": album.get("publishTime", 0),
             # 制作人员信息将在 OCR 阶段填充
-            'credits': {},
+            "credits": {},
             # 核验状态将在后续阶段填充
-            'verification': {}
+            "verification": {},
         }
-        
-        return {
-            'metadata': metadata,
-            'success': True,
-            'error': None
-        }
-    
+
+        return {"metadata": metadata, "success": True, "error": ""}
+
     except json.JSONDecodeError as e:
-        return {
-            'metadata': None,
-            'success': False,
-            'error': f'JSON 解析失败: {str(e)}'
-        }
+        return {"metadata": None, "success": False, "error": f"JSON 解析失败: {str(e)}"}
     except Exception as e:
         return {
-            'metadata': None,
-            'success': False,
-            'error': f'数据结构化失败: {str(e)}'
+            "metadata": None,
+            "success": False,
+            "error": f"数据结构化失败: {str(e)}",
         }

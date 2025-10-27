@@ -1,0 +1,28 @@
+{
+  "node_type": "http-request",
+  "title": "QQ 音乐 - 获取封面图 URL",
+  "description": "获取 QQ 音乐封面图的实际 URL",
+  "config": {
+    "method": "GET",
+    "url": "{{env.QQ_MUSIC_API_HOST}}/cover?id={{parse_qqmusic_response.album_pmid}}",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "timeout": 10000,
+    "retry": {
+      "enabled": true,
+      "max_retries": 2,
+      "retry_interval": 1000
+    }
+  },
+  "outputs": [
+    {
+      "variable": "body",
+      "type": "string"
+    }
+  ],
+  "error_handling": {
+    "fail_branch": false,
+    "on_error": "continue"
+  }
+}

@@ -5,6 +5,41 @@
 
 ---
 
+## 🎯 为什么使用 Bundle？
+
+### 传统方式的问题
+
+在 Dify Cloud 中手动创建工作流需要：
+
+1. ❌ **手动创建 11+ 个节点** - 耗时且容易出错
+2. ❌ **逐个配置每个节点** - 复制粘贴代码和配置
+3. ❌ **手动连接节点** - 设置依赖关系
+4. ❌ **难以维护** - YML 文件和手动配置容易不同步
+5. ❌ **无法版本控制** - 手动配置难以追踪变更
+
+### Bundle 方式的优势
+
+使用 `music-metadata-checker-bundle.yml`：
+
+1. ✅ **一键导入** - 在 Dify Cloud 选择「导入 DSL 文件」即可
+2. ✅ **完全自包含** - 所有代码和配置已内嵌
+3. ✅ **版本控制** - Bundle 文件可以 Git 追踪
+4. ✅ **易于更新** - 修改源文件后重新构建即可
+5. ✅ **无需手动创建** - 节省大量时间
+
+### 对比
+
+| 操作 | 手动创建 | Bundle 导入 |
+|------|---------|------------|
+| 创建节点 | 手动创建 11+ 个 | 自动创建 |
+| 配置代码 | 逐个复制粘贴 | 已内嵌 |
+| 设置依赖 | 手动连接 | 已配置 |
+| 所需时间 | 1-2 小时 | 2-3 分钟 |
+| 出错风险 | 高 | 低 |
+| 维护成本 | 高 | 低 |
+
+---
+
 ## 🎯 双轨制维护策略
 
 ### 开发环境（模块化）
@@ -111,27 +146,47 @@ python scripts/build_dify_bundle.py
 
 ---
 
-### 步骤 3: 导入 Dify Cloud
+### 步骤 3: 导入到 Dify Cloud
+
+#### 3.1 导入工作流
 
 1. **登录 Dify Cloud**
    - 访问 <https://cloud.dify.ai>
+   - 或使用自托管的 Dify 实例
 
-2. **导入工作流**
+2. **导入 DSL 文件**
    - 点击「工作流」→「导入 DSL 文件」
    - 选择 `music-metadata-checker-bundle.yml`
    - 点击「导入」
+   - 等待导入完成（通常 5-10 秒）
 
-3. **配置环境变量**
+3. **验证导入**
+   - 检查所有节点是否正确加载
+   - 确认节点连接关系正确
+   - 验证代码节点包含完整代码
 
-   ```
-   GEMINI_API_KEY=your_key_here
-   GEMINI_API_BASE_URL=https://generativelanguage.googleapis.com
-   NETEASE_API_HOST=http://your-netease-api
-   QQ_MUSIC_API_HOST=http://your-qqmusic-api
-   ```
+#### 3.2 配置环境变量
 
-4. **运行测试**
-   - 输入测试 URL
+在 Dify 工作流设置中添加以下环境变量：
+
+```bash
+# 必需变量
+NETEASE_API_HOST=https://your-netease-api.com
+QQ_MUSIC_API_HOST=https://your-qqmusic-api.com
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_API_BASE_URL=https://generativelanguage.googleapis.com/v1beta
+
+# 可选变量（启用 Spotify 时需要）
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+```
+
+**详细配置说明**: 参见 [部署指南 - 环境变量配置](../docs/guides/DEPLOYMENT.md#api-keys-required)
+
+#### 3.3 测试工作流
+
+1. **运行测试**
+   - 输入测试 URL: `https://music.163.com#/song?id=2758218600`
    - 验证工作流执行
 
 ---

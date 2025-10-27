@@ -583,7 +583,7 @@ Complete workflow with partial results
 - [Functional Specification](../FUNCTIONAL_SPEC.md) - Feature details
 - [Deployment Guide](DEPLOYMENT.md) - Setup instructions
 - [API Integration](QQMUSIC_API_SETUP.md) - API configuration
-- [Dify Cloud Manual Setup](DIFY_CLOUD_MANUAL_SETUP.md) - Cloud deployment guide
+- [Dify Cloud Manual Setup](../../dify-workflow/BUILD_GUIDE.md) - Cloud deployment guide
 
 ---
 

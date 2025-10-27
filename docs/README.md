@@ -49,7 +49,7 @@ Complete documentation for the Music Metadata Verification System.
 **Dify Cloud 用户** (推荐从这里开始):
 
 - [Dify Cloud Quick Start](guides/DIFY_CLOUD_QUICK_START.md) - 30 分钟快速开始 🚀
-- [Dify Cloud Manual Setup](guides/DIFY_CLOUD_MANUAL_SETUP.md) - 完整手动创建指南
+- [Dify Cloud Manual Setup](guides/../../dify-workflow/BUILD_GUIDE.md) - 完整手动创建指南
 - [Dify API Response Handling](guides/DIFY_API_RESPONSE_HANDLING.md) - API 响应处理指南
 - [Dify Cloud Troubleshooting](guides/DIFY_CLOUD_TROUBLESHOOTING.md) - 常见问题解决方案
 

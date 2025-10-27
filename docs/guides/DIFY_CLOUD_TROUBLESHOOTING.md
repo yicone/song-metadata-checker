@@ -650,7 +650,7 @@ def main(qqmusic_response: dict) -> dict:
 
 ## 📚 相关文档
 
-- [完整手动创建指南](DIFY_CLOUD_MANUAL_SETUP.md)
+- [完整手动创建指南](../../dify-workflow/BUILD_GUIDE.md)
 - [Dify 工作流设置](DIFY_WORKFLOW_SETUP.md)
 - [QQ Music API 配置](QQMUSIC_API_SETUP.md)
 

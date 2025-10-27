@@ -260,6 +260,79 @@ poetry run python scripts/test_workflow.py \
 
 ---
 
+## Testing
+
+### Test Workflow
+
+After deployment, verify the workflow is working correctly.
+
+#### Test Input
+
+```json
+{
+  "song_url": "https://music.163.com#/song?id=2758218600"
+}
+```
+
+#### Expected Output
+
+```json
+{
+  "metadata": {
+    "song_id": "2758218600",
+    "source": "NetEase Cloud Music",
+    "verified_with": ["QQ Music"]
+  },
+  "fields": {
+    "title": {
+      "value": "歌曲名称",
+      "status": "确认",
+      "confirmed_by": ["QQ Music"]
+    },
+    "artists": {
+      "value": ["艺术家名"],
+      "status": "确认",
+      "confirmed_by": ["QQ Music"]
+    }
+  },
+  "summary": {
+    "total_fields": 2,
+    "confirmed": 2,
+    "questionable": 0,
+    "not_found": 0,
+    "confidence_score": 1.0
+  }
+}
+```
+
+#### Verification Steps
+
+1. **Check API Responses**:
+   - NetEase API returns valid song data
+   - QQ Music API returns matching results
+   - Gemini API responds (if OCR enabled)
+
+2. **Verify Data Quality**:
+   - Song metadata is complete
+   - Cross-platform verification works
+   - Confidence scores are accurate
+
+3. **Test Error Handling**:
+   - Invalid URL handling
+   - API timeout handling
+   - Missing data handling
+
+### Common Test Cases
+
+| Test Case | Input | Expected Result |
+|-----------|-------|----------------|
+| Valid URL | `https://music.163.com#/song?id=123` | Success with metadata |
+| Invalid URL | `https://invalid-url.com` | Error with message |
+| Non-existent Song | Valid URL with fake ID | Error: Song not found |
+| API Timeout | Any URL (simulate timeout) | Error: Timeout |
+
+---
+
 ## Troubleshooting
 
 ### NetEase API Not Accessible

@@ -4,7 +4,7 @@
 
 > **⚠️ Dify Cloud 用户重要提示**:
 > YAML 文件包含外部代码引用，**无法直接导入** Dify Cloud。
-> 请使用 [Dify Cloud 手动创建指南](DIFY_CLOUD_MANUAL_SETUP.md) 逐步创建工作流。
+> 请使用 [Dify Cloud 手动创建指南](../../dify-workflow/BUILD_GUIDE.md) 逐步创建工作流。
 >
 > **✅ 自托管 Dify 用户**: 可以直接导入 YAML 文件。
 
@@ -171,7 +171,7 @@ docker-compose up -d
 
 **解决方案**：
 
-- **推荐**: 使用 [Dify Cloud 手动创建指南](DIFY_CLOUD_MANUAL_SETUP.md) ⭐
+- **推荐**: 使用 [Dify Cloud 手动创建指南](../../dify-workflow/BUILD_GUIDE.md) ⭐
 - **备选**: 使用自托管 Dify（支持 YAML 导入）
 
 ---
@@ -198,7 +198,7 @@ docker-compose up -d
 
 **解决方案**:
 
-1. 使用 [Dify Cloud 手动创建指南](DIFY_CLOUD_MANUAL_SETUP.md) ⭐ **推荐**
+1. 使用 [Dify Cloud 手动创建指南](../../dify-workflow/BUILD_GUIDE.md) ⭐ **推荐**
 2. 该指南包含：
    - 完整的节点创建步骤
    - 所有代码节点的完整代码（包含 Phase 1 增强）
@@ -453,7 +453,7 @@ Phase 1 增强了封面图比较功能，现在需要 Gemini 返回结构化 JSO
 **解决方案**：
 
 1. **使用手动创建指南**（推荐）：
-   - 查看 [Dify Cloud 手动创建指南](DIFY_CLOUD_MANUAL_SETUP.md)
+   - 查看 [Dify Cloud 手动创建指南](../../dify-workflow/BUILD_GUIDE.md)
    - 逐步在 Dify Cloud 中手动创建工作流
    - 直接在界面中编写代码
 
