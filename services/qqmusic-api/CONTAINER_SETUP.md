@@ -345,5 +345,5 @@ docker-compose -f docker-compose-with-upstream.yml restart qqmusic-upstream
 
 ---
 
-**最后更新**: 2025-01-27  
+**最后更新**: 2025-10-27
 **维护者**: [tooling-agent]

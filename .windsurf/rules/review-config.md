@@ -1,7 +1,7 @@
 # Documentation Review - Project Configuration
 
 > **Project**: song-metadata-checker  
-> **Last Updated**: 2025-01-27  
+> **Last Updated**: 2025-10-27
 > **Referenced By**: `.windsurf/workflows/doc-review.md`
 
 ## Project-Specific Check Commands

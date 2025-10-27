@@ -79,7 +79,7 @@ This comprehensive Chinese technical implementation guide has been reorganized i
 
 ### QQ_MUSIC_API_SETUP_GUIDE.md
 
-**Archived Date**: 2025-01-27  
+**Archived Date**: 2025-10-27
 **Reason**: Content consolidated into containerized setup guide  
 **Replacement**: [services/qqmusic-api/CONTAINER_SETUP.md](../../services/qqmusic-api/CONTAINER_SETUP.md)
 
@@ -89,7 +89,7 @@ This root-level setup guide has been superseded by a more comprehensive containe
 
 ### NGINX_PROXY_SETUP.md
 
-**Archived Date**: 2025-01-27  
+**Archived Date**: 2025-10-27
 **Reason**: Content integrated into Dify Cloud quick start guide  
 **Replacement**: [docs/guides/DIFY_CLOUD_QUICK_START.md](../guides/DIFY_CLOUD_QUICK_START.md)
 
@@ -111,5 +111,5 @@ The Nginx proxy configuration has been integrated into the Dify Cloud deployment
 
 ---
 
-**Last Updated**: 2025-01-27  
+**Last Updated**: 2025-10-27
 **Maintained By**: [documentation-agent]

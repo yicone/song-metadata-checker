@@ -5,7 +5,7 @@ trigger: manual
 # Agent Configuration
 
 > **Project**: song-metadata-checker  
-> **Last Updated**: 2025-01-27  
+> **Last Updated**: 2025-10-27
 > **Referenced By**: `AGENTS.md`
 
 ## Agent Responsibilities

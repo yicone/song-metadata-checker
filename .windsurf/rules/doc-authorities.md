@@ -1,7 +1,7 @@
 # Authority Documents Mapping
 
 > **Project**: song-metadata-checker  
-> **Last Updated**: 2025-01-27  
+> **Last Updated**: 2025-10-27
 > **Referenced By**: `docs/DOCUMENTATION_MANAGEMENT.md`
 
 ## Technical Details Authority Documents
