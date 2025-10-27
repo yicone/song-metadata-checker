@@ -92,6 +92,20 @@ docker-compose up -d
 
 ## 导入工作流
 
+### ⚠️ Dify Cloud 用户注意
+
+**如果您使用 Dify Cloud**，YAML 导入可能会失败（Import Error），因为：
+
+- YAML 文件包含外部文件引用（`code_file`, `config_file`）
+- Dify Cloud 无法访问本地文件系统
+
+**解决方案**：
+
+- **推荐**: 使用 [Dify Cloud 手动创建指南](DIFY_CLOUD_MANUAL_SETUP.md) ⭐
+- **备选**: 使用自托管 Dify（支持 YAML 导入）
+
+---
+
 ### 步骤 1: 创建工作流应用
 
 1. 登录 Dify 平台
@@ -99,7 +113,9 @@ docker-compose up -d
 3. 选择 **"工作流"** 或 **"Workflow"** 类型
 4. 输入应用名称：`Music Metadata Checker`
 
-### 步骤 2: 导入 DSL 文件
+### 步骤 2: 导入 DSL 文件（仅自托管 Dify）
+
+**⚠️ 此步骤仅适用于自托管 Dify**
 
 1. 在工作流编辑器中，点击右上角的 **"导入"** 或 **"Import"**
 2. 选择 **"导入 DSL"** 或 **"Import DSL"**
@@ -107,6 +123,8 @@ docker-compose up -d
    - 标准版：`dify-workflow/music-metadata-checker.yml`
    - 简化版：`dify-workflow/music-metadata-checker-simple.yml`
 4. 点击 **"确认导入"**
+
+**如果导入失败**：参考 [Dify Cloud 手动创建指南](DIFY_CLOUD_MANUAL_SETUP.md)
 
 ### 步骤 3: 验证导入
 
@@ -263,28 +281,34 @@ HTTP_TIMEOUT=30000
 
 ## 故障排除
 
-### 问题 1: 导入失败
+### 问题 1: 导入失败 (Import Error)
 
-**症状**: "导入 DSL 失败" 或 "Invalid DSL format"
+**症状**: "Import Error" 或 "导入 DSL 失败"，无详细错误信息
+
+**根本原因**: 
+
+- YAML 文件包含外部文件引用（`code_file`, `config_file`）
+- Dify Cloud 无法访问本地文件系统
+- 需要将代码内联到工作流中
 
 **解决方案**：
 
-1. **检查 Dify 版本**：
+1. **使用手动创建指南**（推荐）：
+   - 查看 [Dify Cloud 手动创建指南](DIFY_CLOUD_MANUAL_SETUP.md)
+   - 逐步在 Dify Cloud 中手动创建工作流
+   - 直接在界面中编写代码
 
-   ```bash
-   # 确保使用 Dify 0.8.0+
-   ```
+2. **使用自托管 Dify**：
+   - 部署自己的 Dify 实例
+   - 自托管版本支持外部文件引用
+   - 可以直接导入 YAML 文件
 
-2. **验证 YAML 格式**：
+3. **验证 YAML 格式**（仅自托管）：
 
    ```bash
    # 使用 YAML 验证工具
    python -c "import yaml; yaml.safe_load(open('dify-workflow/music-metadata-checker.yml'))"
    ```
-
-3. **手动创建节点**：
-   - 如果导入持续失败，参考 `dify-workflow/nodes/` 目录
-   - 手动创建每个节点
 
 ---
 

@@ -48,6 +48,7 @@ Complete documentation for the Music Metadata Verification System.
 
 - [Deployment Guide](guides/DEPLOYMENT.md)
 - [Dify Workflow Setup](guides/DIFY_WORKFLOW_SETUP.md)
+- [Dify Cloud Manual Setup](guides/DIFY_CLOUD_MANUAL_SETUP.md) - 手动创建工作流（Cloud 用户）
 - [QQ Music API Setup](guides/QQMUSIC_API_SETUP.md)
 - [Workflow Overview](guides/WORKFLOW_OVERVIEW.md)
 
