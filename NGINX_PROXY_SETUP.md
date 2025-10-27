@@ -1,5 +1,15 @@
 # ✅ Nginx API 网关设置成功
 
+> **⚠️ 文档已归档 / ARCHIVED**  
+> 本文档已整合到 Dify Cloud 快速开始指南。  
+> 请参考最新文档：[docs/guides/DIFY_CLOUD_QUICK_START.md](docs/guides/DIFY_CLOUD_QUICK_START.md)
+>
+> **归档原因**：
+>
+> - Nginx 配置已整合到 Dify Cloud 部署流程
+> - 内容与 DIFY_CLOUD_QUICK_START.md 重复
+> - 归档日期：2025-01-27
+
 ## 📊 当前状态
 
 **Nginx 代理**: ✅ 运行中  

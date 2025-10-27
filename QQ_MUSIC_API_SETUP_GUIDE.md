@@ -1,6 +1,16 @@
 # QQ Music API 返回 Mock 数据 - 完整解决方案
 
-> **问题**: QQ Music API 返回示例数据而不是真实搜索结果
+> **⚠️ 文档已归档 / ARCHIVED**  
+> 本文档已被更完整的容器化部署指南取代。  
+> 请参考最新文档：[services/qqmusic-api/CONTAINER_SETUP.md](services/qqmusic-api/CONTAINER_SETUP.md)
+>
+> **归档原因**：
+>
+> - 内容已整合到 CONTAINER_SETUP.md
+> - 包含过时的配置信息
+> - 归档日期：2025-01-27
+>
+> **原始问题**: QQ Music API 返回示例数据而不是真实搜索结果
 
 ## 🔍 问题诊断
 
