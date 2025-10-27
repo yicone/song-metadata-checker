@@ -111,6 +111,52 @@ def get_song():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/cover")
+def get_cover():
+    """
+    获取封面图 URL
+    参数:
+        id: 封面图 ID (album pmid)
+        size: 图片尺寸 (可选，默认原图，格式: 500x500)
+    示例:
+        /cover?id=000MkMni19ClKG
+        /cover?id=000MkMni19ClKG&size=500x500
+    """
+    try:
+        cover_id = request.args.get("id", "")
+        size = request.args.get("size", "")
+
+        if not cover_id:
+            return jsonify({"error": "缺少封面图 ID"}), 400
+
+        # 转发到 Rain120 API
+        # Rain120 使用 /getImageUrl 端点
+        url = f"{QQMUSIC_API_BASE}/getImageUrl"
+        params = {"id": cover_id}
+        if size:
+            params["size"] = size
+
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+
+        # 日志输出到 stderr（Docker 容器可见）
+        print(
+            f"[QQ Music API] Cover Response: {response.json()}",
+            file=sys.stderr,
+            flush=True,
+        )
+
+        # 返回完整响应
+        return jsonify(response.json()["response"]["data"])
+
+    except requests.RequestException as e:
+        return jsonify(
+            {"error": f"上游 API 调用失败: {str(e)}", "upstream": QQMUSIC_API_BASE}
+        ), 502
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == "__main__":
     print(f"QQ Music API Proxy starting on port {PORT}...")
     print(f"Forwarding to: {QQMUSIC_API_BASE}")

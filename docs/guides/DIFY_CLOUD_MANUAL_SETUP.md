@@ -539,7 +539,83 @@ def main(qqmusic_song_data) -> dict:
 
 ---
 
-### 步骤 12: 添加 HTTP 节点 - Gemini 封面图比较 (可选)
+### 步骤 12: 添加 HTTP 节点 - 获取 QQ 音乐封面图 URL
+
+**节点类型**: HTTP Request  
+**节点名称**: `qqmusic_cover_url_raw`  
+**描述**: 获取 QQ 音乐封面图的实际 URL
+
+**配置**:
+
+- **Method**: GET
+- **URL**: `{{env.QQ_MUSIC_API_HOST}}/cover?id={{parse_qqmusic_response.album_pmid}}`
+- **Timeout**: 10000ms
+
+**输出变量**:
+
+- `body` → 原始响应（需要解析）
+
+**⚠️ 说明**:
+
+- QQ 音乐的封面图 ID (pmid) 需要通过 API 转换为实际的 URL
+- 可选参数 `size`（如 `500x500`）可以指定图片尺寸
+- Dify HTTP 节点会将响应包装为字符串，需要下一步解析
+
+---
+
+### 步骤 12.1: 添加代码节点 - 解析封面图 URL
+
+**节点类型**: Code  
+**节点名称**: `parse_cover_url`  
+**描述**: 解析 HTTP 响应并提取封面图 URL
+
+**输入变量**:
+
+- `cover_response` → 来自 `qqmusic_cover_url_raw.body`
+
+**代码**:
+
+```python
+import json
+
+def main(cover_response: str) -> dict:
+    """
+    解析 QQ 音乐封面图 API 响应
+    处理 Dify HTTP 节点的字符串包装
+    """
+    try:
+        # 1. 处理 Dify HTTP 节点包装
+        if isinstance(cover_response, str):
+            cover_data = json.loads(cover_response)
+        else:
+            cover_data = cover_response
+        
+        # 2. 提取 imageUrl
+        image_url = cover_data.get('imageUrl', '')
+        
+        return {
+            "cover_url": image_url,
+            "success": True,
+            "error": ""
+        }
+    
+    except Exception as e:
+        return {
+            "cover_url": "",
+            "success": False,
+            "error": str(e)
+        }
+```
+
+**输出变量**:
+
+- `cover_url` (String) - 封面图 URL
+- `success` (Boolean) - 解析状态
+- `error` (String) - 错误信息
+
+---
+
+### 步骤 13: 添加 HTTP 节点 - Gemini 封面图比较 (可选)
 
 **节点类型**: HTTP Request  
 **节点名称**: `gemini_cover_comparison`  
@@ -567,13 +643,13 @@ def main(qqmusic_song_data) -> dict:
       {
         "inline_data": {
           "mime_type": "image/jpeg",
-          "data": "{{initial_data_structuring.metadata.cover_art_url}}"
+          "data": "{{initial_data_structuring.metadata.cover_url}}"
         }
       },
       {
         "inline_data": {
           "mime_type": "image/jpeg",
-          "data": "{{parse_qqmusic_response.album_pmid}}"
+          "data": "{{parse_cover_url.cover_url}}"
         }
       }
     ]
@@ -593,7 +669,7 @@ def main(qqmusic_song_data) -> dict:
 
 ---
 
-### 步骤 13: 添加代码节点 - 数据整合与核验
+### 步骤 14: 添加代码节点 - 数据整合与核验
 
 **节点类型**: Code  
 **节点名称**: `consolidate`
@@ -837,7 +913,7 @@ def main(
 
 ---
 
-### 步骤 14: 添加 End 节点
+### 步骤 15: 添加 End 节点
 
 **节点类型**: End  
 **节点名称**: `end`
