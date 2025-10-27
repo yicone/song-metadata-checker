@@ -4,6 +4,10 @@ description: 文档审查检查清单 - 确保文档一致性和准确性
 
 # 文档审查检查清单
 
+> **🔄 Reusable Template**: This workflow follows a template pattern for cross-project use  
+> **📍 Project Config**: See `.windsurf/rules/review-config.md` for project-specific checks  
+> **🤖 AI Agent Compatible**: Can be executed by AI agents or manually
+
 本工作流程用于审查文档更新，确保符合项目文档管理规范。
 
 ## 何时使用
@@ -17,47 +21,47 @@ description: 文档审查检查清单 - 确保文档一致性和准确性
 
 ### 1. 技术细节一致性检查
 
-#### 端口号检查
+> **📖 Project-Specific Checks**: See `.windsurf/rules/review-config.md` for detailed check commands
 
+#### 通用检查原则
+
+**端口号检查**:
 ```bash
 # 搜索所有端口引用
-grep -r "3200\|3300\|3001" docs/ services/ --exclude-dir=node_modules --exclude-dir=archive
-
-# 验证：
-# - 3200: Rain120 容器内端口
-# - 3300: Rain120 主机映射端口
-# - 3001: 代理层端口（推荐使用）
+grep -r "PORT_PATTERN" docs/ services/ --exclude-dir=node_modules --exclude-dir=archive
 ```
 
-#### API 端点检查
-
+**API 端点检查**:
 ```bash
-# 搜索 QQ Music API 端点
-grep -r "/search\|/song\|getSearchByKey\|getSongInfo" docs/ services/ --exclude-dir=node_modules --exclude-dir=archive
-
-# 验证：
-# Rain120 端点: /getSearchByKey, /getSongInfo
-# 代理层端点: /search, /song
+# 搜索 API 端点
+grep -r "ENDPOINT_PATTERN" docs/ services/ --exclude-dir=node_modules --exclude-dir=archive
 ```
 
-#### 环境变量检查
-
+**环境变量检查**:
 ```bash
-# 搜索 QQ Music API 配置
-grep -r "QQ_MUSIC_API_HOST\|QQMUSIC_API_BASE" docs/ services/ --exclude-dir=node_modules --exclude-dir=archive
-
-# 验证：
-# 应用层: QQ_MUSIC_API_HOST=http://localhost:3001
-# 代理层: QQMUSIC_API_BASE=http://qqmusic-upstream:3200
+# 搜索环境变量配置
+grep -r "ENV_VAR_PATTERN" docs/ services/ --exclude-dir=node_modules
 ```
+
+<!-- BEGIN PROJECT_SPECIFIC -->
+**This Project**: See `.windsurf/rules/review-config.md` for:
+- Specific port numbers to check
+- API endpoint patterns
+- Environment variable names
+<!-- END PROJECT_SPECIFIC -->
+
+---
 
 ### 2. SSoT (单一事实来源) 检查
 
-#### 确认权威文档
+> **📖 Authority Documents**: See `.windsurf/rules/doc-authorities.md` for project-specific mappings
 
-- **QQ Music API 设置**: `services/qqmusic-api/CONTAINER_SETUP.md`
-- **QQ Music API 概述**: `services/qqmusic-api/README.md`
-- **项目部署**: `docs/guides/DEPLOYMENT.md`
+#### 通用原则
+
+**确认权威文档**:
+- Each technical detail type should have ONE authority document
+- Other documents should link to (not duplicate) the authority
+- Authority documents are defined in project configuration
 - **功能规范**: `docs/FUNCTIONAL_SPEC.md`
 
 #### 检查重复内容
@@ -207,3 +211,36 @@ done
 - [文档管理规范](../../docs/DOCUMENTATION_MANAGEMENT.md)
 - [命名约定](../../docs/NAMING_CONVENTIONS.md)
 - [修复索引](../../docs/FIXES_INDEX.md)
+
+---
+
+## Template Information
+
+**Template Version**: 1.0.0  
+**Last Updated**: 2025-01-27  
+**Reusable**: Yes - Copy to new projects and adapt check commands
+
+### How to Adapt for New Projects
+
+1. Copy this file to `.windsurf/workflows/doc-review.md`
+2. Create `.windsurf/rules/review-config.md` with project-specific check commands
+3. Update `<!-- BEGIN PROJECT_SPECIFIC -->` sections
+4. Adjust check patterns based on project technology stack
+5. Add project-specific common issues
+
+### Maintaining This Template
+
+- Keep universal review principles generic
+- Move project-specific checks to `.windsurf/rules/review-config.md`
+- Update based on lessons learned from documentation issues
+- Ensure compatibility with CI/CD integration
+
+### Project-Specific Configuration
+
+<!-- BEGIN PROJECT_SPECIFIC -->
+**See**: `.windsurf/rules/review-config.md` for:
+- Detailed check commands with actual patterns
+- Project-specific authority documents
+- Common issues and their fixes
+- Weekly/monthly/quarterly review checklists
+<!-- END PROJECT_SPECIFIC -->
