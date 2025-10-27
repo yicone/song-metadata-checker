@@ -10,6 +10,24 @@ This index provides quick summaries of all fixes and improvements. Each entry li
 
 ## Recent Fixes
 
+### [Documentation Consolidation](archive/2025-01-27-documentation-consolidation-analysis.md)
+
+**Date**: 2025-01-27  
+**Impact**: High  
+**Status**: ✅ 已完成  
+**Summary**: Consolidated QQ Music API documentation from 6 files to 2 authoritative files. Moved root-level technical guides (`QQ_MUSIC_API_SETUP_GUIDE.md`, `NGINX_PROXY_SETUP.md`) to archive directory. Improved SSOT compliance from 70% to 90%.
+
+**Key Actions**:
+
+- Archived 2 root-level documents violating documentation structure
+- Marked `services/qqmusic-api/QUICK_START.md` as outdated
+- Updated all references to point to authoritative documents
+- Reduced root directory from 9 to 6 core files
+
+[Read detailed analysis →](archive/2025-01-27-documentation-consolidation-analysis.md)
+
+---
+
 ### [Port and Endpoint Documentation Inconsistency](fixes/2025-01-27-port-documentation-inconsistency.md)
 
 **Date**: 2025-01-27  
@@ -91,6 +109,6 @@ _No entries yet_
 
 ---
 
-**Last Updated**: 2025-10-26  
+**Last Updated**: 2025-01-27  
 **Maintained By**: [documentation-agent]  
 **Review Frequency**: Weekly

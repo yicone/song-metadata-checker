@@ -290,10 +290,10 @@ Nginx (localhost:8888)
 
 ## 📚 相关文档
 
-- [QQ Music API 服务说明](services/qqmusic-api/README.md)
+- [QQ Music API 服务说明](../../services/qqmusic-api/README.md)
 - [Rain120/qq-music-api GitHub](https://github.com/Rain120/qq-music-api)
-- [Nginx 代理设置](NGINX_PROXY_SETUP.md)
-- [Dify Cloud 故障排除](docs/guides/DIFY_CLOUD_TROUBLESHOOTING.md)
+- [Nginx 代理设置 (Archived)](NGINX_PROXY_SETUP.md)
+- [Dify Cloud 故障排除](../guides/DIFY_CLOUD_TROUBLESHOOTING.md)
 
 ---
 

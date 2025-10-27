@@ -77,6 +77,26 @@ This comprehensive Chinese technical implementation guide has been reorganized i
 
 ---
 
+### QQ_MUSIC_API_SETUP_GUIDE.md
+
+**Archived Date**: 2025-01-27  
+**Reason**: Content consolidated into containerized setup guide  
+**Replacement**: [services/qqmusic-api/CONTAINER_SETUP.md](../../services/qqmusic-api/CONTAINER_SETUP.md)
+
+This root-level setup guide has been superseded by a more comprehensive containerized deployment guide. The original focused on troubleshooting mock data issues, which is now covered in the complete container setup documentation.
+
+---
+
+### NGINX_PROXY_SETUP.md
+
+**Archived Date**: 2025-01-27  
+**Reason**: Content integrated into Dify Cloud quick start guide  
+**Replacement**: [docs/guides/DIFY_CLOUD_QUICK_START.md](../guides/DIFY_CLOUD_QUICK_START.md)
+
+The Nginx proxy configuration has been integrated into the Dify Cloud deployment workflow. Since Nginx is primarily used for Dify Cloud integration (via ngrok/Cloudflare Tunnel), it makes more sense to document it as part of that process rather than as a standalone setup.
+
+---
+
 ## 📝 Usage Guidelines
 
 **For Current Information**: Always refer to the active documentation in the main `docs/` directory.
@@ -91,5 +111,5 @@ This comprehensive Chinese technical implementation guide has been reorganized i
 
 ---
 
-**Last Updated**: 2025-10-26  
+**Last Updated**: 2025-01-27  
 **Maintained By**: [documentation-agent]

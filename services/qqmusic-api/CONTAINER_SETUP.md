@@ -338,11 +338,12 @@ docker-compose -f docker-compose-with-upstream.yml restart qqmusic-upstream
 
 ## 📚 相关文档
 
-- [QQ Music API Setup Guide](../../QQ_MUSIC_API_SETUP_GUIDE.md)
+- [QQ Music API Setup Guide (Archived)](../../docs/archive/QQ_MUSIC_API_SETUP_GUIDE.md) - 历史参考
 - [Rain120/qq-music-api GitHub](https://github.com/Rain120/qq-music-api)
-- [Nginx Proxy Setup](../../NGINX_PROXY_SETUP.md)
+- [Nginx Proxy Setup (Archived)](../../docs/archive/NGINX_PROXY_SETUP.md) - 已整合到 Dify Cloud 指南
+- [Dify Cloud Quick Start](../../docs/guides/DIFY_CLOUD_QUICK_START.md) - Nginx 配置在此
 
 ---
 
-**最后更新**: 2025-10-27  
+**最后更新**: 2025-01-27  
 **维护者**: [tooling-agent]
