@@ -206,16 +206,9 @@ Visit `http://localhost/install` and complete setup.
 
 ### Configure Workflow Variables
 
-In Dify workflow settings, add:
+Configure environment variables in Dify workflow settings.
 
-- `GEMINI_API_KEY`
-- `GEMINI_API_BASE_URL`
-- `SPOTIFY_CLIENT_ID` (if using Spotify)
-- `SPOTIFY_CLIENT_SECRET` (if using Spotify)
-- `SPOTIFY_AUTH_URL`
-- `SPOTIFY_API_BASE_URL`
-- `NETEASE_API_HOST`
-- `QQ_MUSIC_API_HOST`
+[📖 See complete Dify variable configuration →](DIFY_WORKFLOW_SETUP.md#配置环境变量)
 
 ---
 

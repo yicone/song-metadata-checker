@@ -35,11 +35,11 @@ Get the Music Metadata Verification System running in 5 minutes with minimal con
 
 ```bash
 cp .env.example .env
-# Edit .env: Add GEMINI_API_KEY, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET
+# Edit .env with your API keys
 docker-compose up -d
 ```
 
-[📖 See complete configuration →](guides/DEPLOYMENT.md#step-2-configure-environment)
+[📖 See complete environment configuration →](guides/DEPLOYMENT.md#step-2-configure-environment)
 
 #### 3️⃣ Import & Test
 
@@ -85,11 +85,11 @@ You're ready to verify music metadata. Next:
 
 ```bash
 cp .env.example .env
-# 编辑 .env: 添加 GEMINI_API_KEY, QQ_MUSIC_API_HOST
+# 编辑 .env 填入 API 密钥
 docker-compose up -d
 ```
 
-[📖 查看完整配置说明 →](guides/DEPLOYMENT.md#step-2-configure-environment)
+[📖 查看完整环境配置 →](guides/DEPLOYMENT.md#step-2-configure-environment)
 
 #### 3️⃣ 导入与测试
 

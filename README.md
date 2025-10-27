@@ -30,21 +30,13 @@
 
 ## 🚀 快速开始
 
-```bash
-# 1. 启动 NetEase API
-cd services/netease-api && docker-compose up -d
+**3 步快速部署**:
 
-# 2. 配置环境变量
-cp .env.example .env  # 编辑并填入 API 密钥
+1. 启动 API 服务
+2. 配置环境变量
+3. 导入 Dify 工作流
 
-# 3. 验证 API 连接
-poetry run python scripts/validate_apis.py
-
-# 4. 导入 Dify 工作流
-# 在 Dify 平台导入 dify-workflow/music-metadata-checker.yml
-```
-
-[完整部署指南 →](docs/guides/DEPLOYMENT.md) | [5分钟快速开始 →](docs/QUICKSTART.md)
+[📖 5分钟快速开始 →](docs/QUICKSTART.md) | [📖 完整部署指南 →](docs/guides/DEPLOYMENT.md)
 
 ## 📁 项目结构
 
@@ -75,23 +67,17 @@ song-metadata-checker/
 
 ## 🔑 核心配置
 
-**必需 API**:
+**必需 API**: NetEase, QQ Music, Gemini  
+**可选 API**: Spotify
 
-- NetEase Cloud Music API (数据源)
-- QQ Music API (核验源)
-- Google Gemini API (OCR + 图像比对)
-
-**可选 API**:
-
-- Spotify API (额外核验源)
-
-[API 配置详情 →](docs/guides/DEPLOYMENT.md#service-configuration)
+[📖 API 配置详情 →](docs/guides/DEPLOYMENT.md#service-configuration)
 
 ## 📖 文档导航
 
 ### 👥 用户文档
 
 - **[快速开始](docs/QUICKSTART.md)** - 5分钟快速部署
+- **[Dify 工作流设置](docs/guides/DIFY_WORKFLOW_SETUP.md)** - 工作流导入和配置 ⭐
 - **[功能规格](docs/FUNCTIONAL_SPEC.md)** - 完整功能列表
 - **[部署指南](docs/guides/DEPLOYMENT.md)** - 详细部署说明
 
@@ -104,19 +90,18 @@ song-metadata-checker/
 ### 📝 贡献者文档
 
 - **[AI 协作指南](AGENTS.md)** - AI agent 工作流程
+- **[项目状态](PROJECT_STATUS.md)** - 当前进度和下一步
 - **[文档索引](docs/README.md)** - 所有文档列表
 - **[修复索引](docs/FIXES_INDEX.md)** - Bug 修复记录
 - **[变更日志](CHANGELOG.md)** - 版本历史
 
 ## 🐛 故障排除
 
-常见问题:
+常见问题请查看:
 
-- **NetEase API 无法访问** - 检查 Docker 容器状态
-- **Spotify 认证失败** - 验证 Client ID 和 Secret
-- **Gemini API 超时** - 检查网络和 API 密钥
-
-[完整故障排除指南 →](docs/guides/DEPLOYMENT.md#troubleshooting)
+- [部署指南 - 故障排除](docs/guides/DEPLOYMENT.md#troubleshooting)
+- [Dify 设置 - 常见问题](docs/guides/DIFY_WORKFLOW_SETUP.md#故障排除)
+- [修复索引](docs/FIXES_INDEX.md)
 
 ## 🗺️ 路线图
 
