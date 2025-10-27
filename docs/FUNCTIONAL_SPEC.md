@@ -274,12 +274,16 @@ interface VerificationReport {
 
 ### QQ Music API
 
-**Base URL**: `http://localhost:3300` (configurable)
+**Base URL**: `http://localhost:3001` (代理层，推荐)
 
-**Endpoints**:
+**Endpoints** (代理层):
 
 - `GET /search?key={query}` - Search songs
 - `GET /song?songmid={song_mid}` - Song details
+
+**Architecture**: 使用双层架构（代理层 + Rain120 上游 API）
+
+**详细配置**: 参见 [services/qqmusic-api/README.md](../services/qqmusic-api/README.md)
 
 **Status**: ✅ Required
 
@@ -374,8 +378,8 @@ Spotify: Not found
 # NetEase Cloud Music API (Required)
 NETEASE_API_HOST=http://localhost:3000
 
-# QQ Music API (Required)
-QQ_MUSIC_API_HOST=http://localhost:3300
+# QQ Music API (Required) - 使用代理层
+QQ_MUSIC_API_HOST=http://localhost:3001
 
 # Google Gemini API (Required)
 GEMINI_API_KEY=your_api_key

@@ -10,7 +10,21 @@ This index provides quick summaries of all fixes and improvements. Each entry li
 
 ## Recent Fixes
 
-_No fixes documented yet. This section will be populated as fixes are implemented._
+### [Port and Endpoint Documentation Inconsistency](fixes/2025-01-27-port-documentation-inconsistency.md)
+
+**Date**: 2025-01-27  
+**Impact**: High  
+**Status**: ✅ 已完成（包含预防措施）  
+**Summary**: Discovered widespread documentation inconsistencies regarding QQ Music API ports (3200/3300) and endpoints (/search/song vs /getSearchByKey). Multiple documents contain outdated information that conflicts with current implementation, violating SSoT principles.
+
+**Key Issues**:
+
+- 15+ files reference incorrect endpoint paths
+- Port numbers (3200 vs 3300) used inconsistently without clarification
+- Environment variable recommendations point to wrong service layer
+- Archived documents lack deprecation warnings
+
+[Read detailed analysis →](fixes/2025-01-27-port-documentation-inconsistency.md)
 
 ---
 

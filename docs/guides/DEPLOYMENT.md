@@ -79,8 +79,8 @@ SPOTIFY_API_BASE_URL=https://api.spotify.com/v1
 # NeteaseCloudMusicApi (Required)
 NETEASE_API_HOST=http://localhost:3000
 
-# QQ Music API (Required)
-QQ_MUSIC_API_HOST=http://localhost:3300
+# QQ Music API (Required) - 使用代理层
+QQ_MUSIC_API_HOST=http://localhost:3001
 ```
 
 ### Step 3: Deploy NetEase Cloud Music API
@@ -164,8 +164,9 @@ NETEASE_API_HOST=http://localhost:3001
 
 ### QQ Music API
 
-**Default Port**: 3300  
-**Configuration**: See [QQ Music API Setup Guide](QQMUSIC_API_SETUP.md)
+**Default Port**: 3001 (代理层)  
+**Architecture**: 双层架构 (代理层 3001 + Rain120 上游 3200/3300)  
+**Configuration**: See [services/qqmusic-api/CONTAINER_SETUP.md](../../services/qqmusic-api/CONTAINER_SETUP.md)
 
 ---
 

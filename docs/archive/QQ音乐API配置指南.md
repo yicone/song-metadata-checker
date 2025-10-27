@@ -1,5 +1,17 @@
 # QQ 音乐 API 配置指南
 
+> **⚠️ 文档已归档 / ARCHIVED**  
+> 本文档已过时，仅供历史参考。  
+> **请使用最新文档**: [services/qqmusic-api/CONTAINER_SETUP.md](../../services/qqmusic-api/CONTAINER_SETUP.md)
+>
+> **主要问题**:
+>
+> - 端点路径已变更 (`/search/song` → `/getSearchByKey`)
+> - 端口配置不准确 (3300 vs 3200 vs 3001)
+> - 缺少代理层架构说明
+
+---
+
 ## 为什么需要 QQ 音乐 API？
 
 核验系统的核心原理是**多源交叉验证**：

@@ -7,6 +7,7 @@
 ### 症状
 
 `find_qqmusic_match` 节点返回:
+
 ```json
 {
   "match_found": true,
@@ -38,15 +39,15 @@ cd qq-music-api
 # 安装依赖
 npm install
 
-# 启动服务（默认端口 3300）
+# 启动服务（默认端口 3200）
 npm start
 ```
 
 #### 步骤 2: 测试 Rain120 API
 
 ```bash
-# 测试搜索
-curl "http://localhost:3300/search/song?key=周杰伦&pageSize=5"
+# 测试搜索 (Rain120 端点)
+curl "http://localhost:3200/getSearchByKey?key=周杰伦&pageSize=5"
 
 # 应该返回真实的搜索结果
 ```
@@ -73,16 +74,20 @@ http {
             proxy_pass http://host.docker.internal:3000;
         }
         
-        # QQ Music API - 直接转发到 Rain120 API
-        location /qqmusic/search {
-            rewrite ^/qqmusic/search /search/song break;
-            proxy_pass http://host.docker.internal:3300;
+        # QQ Music API - 转发到代理层（推荐）
+        location /qqmusic/ {
+            proxy_pass http://host.docker.internal:3001/;
         }
         
-        location /qqmusic/song {
-            rewrite ^/qqmusic/song /song break;
-            proxy_pass http://host.docker.internal:3300;
-        }
+        # 或直接转发到 Rain120 API（不推荐）
+        # location /qqmusic/search {
+        #     rewrite ^/qqmusic/search /getSearchByKey break;
+        #     proxy_pass http://host.docker.internal:3200;
+        # }
+        # location /qqmusic/song {
+        #     rewrite ^/qqmusic/song /getSongInfo break;
+        #     proxy_pass http://host.docker.internal:3200;
+        # }
     }
 }
 EOF
@@ -168,11 +173,13 @@ curl "http://localhost:8888/qqmusic/search?key=顽疾&pageSize=5" | jq '.data.so
 **端点**: `/search/song`
 
 **参数**:
+
 - `key`: 搜索关键词
 - `pageSize`: 每页数量（可选，默认 10）
 - `pageNo`: 页码（可选，默认 1）
 
 **响应**:
+
 ```json
 {
   "code": 0,
@@ -196,6 +203,7 @@ curl "http://localhost:8888/qqmusic/search?key=顽疾&pageSize=5" | jq '.data.so
 **端点**: `/song`
 
 **参数**:
+
 - `songmid`: 歌曲 MID
 
 ---
@@ -205,23 +213,29 @@ curl "http://localhost:8888/qqmusic/search?key=顽疾&pageSize=5" | jq '.data.so
 ### 问题 1: Rain120 API 启动失败
 
 **检查**:
+
 ```bash
 # 检查 Node.js 版本
 node --version  # 需要 >= 14
 
 # 检查端口占用
-lsof -i :3300
+lsof -i :3200  # Rain120 API 默认端口
+lsof -i :3001  # 代理层端口
 ```
 
 ### 问题 2: Nginx 转发失败
 
 **检查**:
+
 ```bash
 # 查看 Nginx 日志
 docker logs nginx-proxy
 
 # 测试 Rain120 API 直接访问
-curl "http://localhost:3300/search/song?key=test"
+curl "http://localhost:3200/getSearchByKey?key=test"
+
+# 测试代理层（如果使用容器化部署）
+curl "http://localhost:3001/search?key=test"
 ```
 
 ### 问题 3: 仍然返回 Mock 数据
@@ -229,6 +243,7 @@ curl "http://localhost:3300/search/song?key=test"
 **原因**: 可能缓存了旧的响应
 
 **解决**:
+
 ```bash
 # 重启所有服务
 docker restart nginx-proxy
@@ -251,7 +266,7 @@ ngrok (https://xxx.ngrok.io)
     ↓
 Nginx (localhost:8888)
     ├→ /netease → NetEase API (localhost:3000)
-    └→ /qqmusic → Rain120 API (localhost:3300)
+    └→ /qqmusic → QQ Music Proxy (localhost:3001) → Rain120 API
 ```
 
 ### 优势

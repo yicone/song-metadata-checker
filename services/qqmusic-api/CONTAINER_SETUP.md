@@ -68,9 +68,9 @@ docker-compose -f docker-compose-with-upstream.yml logs -f
 
 ```bash
 # 测试上游 API (直接访问 Rain120)
-curl "http://localhost:3300/search/song?key=周杰伦&pageSize=5"
+curl "http://localhost:3300/getSearchByKey?key=周杰伦&pageSize=5"
 
-# 测试代理 API (通过 Flask 代理)
+# 测试代理 API (通过 Flask 代理) - 推荐
 curl "http://localhost:3001/search?key=周杰伦&pageSize=5"
 ```
 
@@ -147,6 +147,7 @@ services:
 ```
 
 **优势**:
+
 - ✅ 代码持久化
 - ✅ 可以在本地编辑
 - ✅ 容器重启不丢失
@@ -161,8 +162,8 @@ services:
 # 通过代理
 curl "http://localhost:3001/search?key=顽疾&pageSize=5" | jq '.data.song.list[0]'
 
-# 直接访问上游
-curl "http://localhost:3300/search/song?key=顽疾&pageSize=5" | jq '.data.song.list[0]'
+# 直接访问上游 (Rain120 端点)
+curl "http://localhost:3300/getSearchByKey?key=顽疾&pageSize=5" | jq '.data.song.list[0]'
 ```
 
 ### 获取歌曲详情
@@ -172,7 +173,7 @@ curl "http://localhost:3300/search/song?key=顽疾&pageSize=5" | jq '.data.song.
 curl "http://localhost:3001/song?songmid=SONG_MID" | jq '.'
 
 # 直接访问上游
-curl "http://localhost:3300/song?songmid=SONG_MID" | jq '.'
+curl "http://localhost:3300/getSongInfo?songmid=SONG_MID" | jq '.'
 ```
 
 ---
@@ -203,6 +204,7 @@ http {
 ```
 
 重启 Nginx:
+
 ```bash
 docker restart nginx-proxy
 ```
@@ -216,11 +218,13 @@ docker restart nginx-proxy
 **症状**: 容器启动后立即退出
 
 **检查日志**:
+
 ```bash
 docker-compose -f docker-compose-with-upstream.yml logs qqmusic-upstream
 ```
 
 **解决**:
+
 ```bash
 # 删除 node_modules 重新安装
 rm -rf volumes/qq-music-api/node_modules
@@ -232,6 +236,7 @@ docker-compose -f docker-compose-with-upstream.yml restart qqmusic-upstream
 **症状**: `Error: bind: address already in use`
 
 **检查端口占用**:
+
 ```bash
 lsof -i :3300
 lsof -i :3001
@@ -242,23 +247,27 @@ lsof -i :3001
 ### 问题 3: 上游 API 返回错误
 
 **检查健康状态**:
+
 ```bash
 docker-compose -f docker-compose-with-upstream.yml ps
 ```
 
 **测试上游 API**:
+
 ```bash
-curl "http://localhost:3300/search/song?key=test"
+curl "http://localhost:3300/getSearchByKey?key=test"
 ```
 
 ### 问题 4: 代理无法连接上游
 
 **检查网络**:
+
 ```bash
 docker network inspect qqmusic-api_music-metadata-network
 ```
 
 **测试容器间连接**:
+
 ```bash
 docker exec qqmusic-api curl http://qqmusic-upstream:3300
 ```

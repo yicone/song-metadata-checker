@@ -14,97 +14,143 @@
 
 单一数据源无法完成核验，必须有至少一个独立的第三方数据源。
 
-## 实现方案
+## 架构说明
 
-### 方案 1: 使用现有的 QQ 音乐 API 项目
+本项目使用 **双层架构**：
 
-推荐使用社区项目 [Rain120/qq-music-api](https://github.com/Rain120/qq-music-api)：
-
-```bash
-# 克隆项目
-git clone https://github.com/Rain120/qq-music-api.git
-cd qq-music-api
-
-# 安装依赖
-npm install
-
-# 启动服务
-npm start
+```
+用户/应用
+    ↓
+代理层 (qqmusic-api) - Port 3001
+    ↓
+上游 API (Rain120) - Port 3200 (容器内) / 3300 (主机)
 ```
 
-服务默认运行在 `http://localhost:3300`，更新 `.env` 中的 `QQ_MUSIC_API_HOST`。
+### 为什么需要代理层？
 
-### 方案 2: 使用本项目的简化代理
+1. **端点标准化**: Rain120 API 使用 `/getSearchByKey`，代理层简化为 `/search`
+2. **响应格式统一**: 统一处理不同上游 API 的响应格式
+3. **错误处理**: 提供一致的错误响应
+4. **未来扩展**: 可以轻松切换或添加其他音乐 API
 
-当前 `server.py` 提供了基础框架，需要集成实际的 API 调用逻辑。
+## 端口映射表
+
+| 服务 | 容器内端口 | 主机端口 | 访问地址 | 推荐使用 |
+|------|-----------|---------|---------|----------|
+| **qqmusic-api (代理层)** | 3001 | 3001 | `http://localhost:3001` | ✅ **推荐** |
+| qqmusic-upstream (Rain120) | 3200 | 3300 | `http://localhost:3300` | ⚠️ 仅调试 |
+
+**重要**: 应用应该连接到代理层 (3001)，而不是直接连接上游 API (3300)。
 
 ## 快速启动
 
+### 方式 1: 使用 Docker Compose（推荐）
+
 ```bash
 cd services/qqmusic-api
-docker-compose up -d
+
+# 使用自动化脚本（推荐）
+./setup-upstream.sh
+
+# 或手动启动
+docker-compose -f docker-compose-with-upstream.yml up -d
 ```
 
-服务将在 `http://localhost:3001` 启动。
+这会启动两个容器：
 
-## API 端点
+- `qqmusic-upstream`: Rain120 API (端口 3300)
+- `qqmusic-api`: 代理层 (端口 3001)
 
-### 健康检查
+### 方式 2: 手动启动上游 API
 
-```bash
-GET /
-```
-
-### 搜索歌曲
+如果你想自己管理 Rain120 API：
 
 ```bash
-GET /search?key=歌曲名&pageSize=10&pageNo=1
-```
-
-### 获取歌曲详情
-
-```bash
-GET /song?songmid=歌曲MID
-```
-
-## 推荐配置
-
-### 使用 Rain120/qq-music-api
-
-1. **克隆并启动服务**：
-
-```bash
-git clone https://github.com/Rain120/qq-music-api.git ../qqmusic-api-external
-cd ../qqmusic-api-external
+# 1. 克隆并启动 Rain120 API
+git clone https://github.com/Rain120/qq-music-api.git /tmp/qq-music-api
+cd /tmp/qq-music-api
 npm install
-npm start
+npm start  # 默认端口 3200
+
+# 2. 启动代理层
+cd services/qqmusic-api
+export QQMUSIC_API_BASE=http://localhost:3200
+python server-proxy.py
 ```
 
-2. **更新环境变量**：
+## API 端点对照表
+
+### 代理层端点（推荐使用）
+
+**Base URL**: `http://localhost:3001`
+
+| 端点 | 方法 | 参数 | 说明 |
+|------|------|------|------|
+| `/` | GET | - | 健康检查 |
+| `/search` | GET | `key`, `pageSize`, `pageNo` | 搜索歌曲 |
+| `/song` | GET | `songmid` | 获取歌曲详情 |
+
+### 上游 API 端点（Rain120）
+
+**Base URL**: `http://localhost:3300` (仅供参考)
+
+| 端点 | 方法 | 参数 | 说明 |
+|------|------|------|------|
+| `/getSearchByKey` | GET | `key`, `pageSize`, `pageNo` | 搜索歌曲 |
+| `/getSongInfo` | GET | `songmid` | 获取歌曲详情 |
+
+**注意**: 代理层会自动将请求转发到正确的上游端点。
+
+## 环境变量配置
+
+### 应用配置（项目根目录 .env）
 
 ```bash
-# 在项目根目录的 .env 文件中
-QQ_MUSIC_API_HOST=http://localhost:3300
+# ✅ 正确：使用代理层
+QQ_MUSIC_API_HOST=http://localhost:3001
+
+# ❌ 错误：直接使用上游 API
+# QQ_MUSIC_API_HOST=http://localhost:3300
 ```
 
-3. **测试 API**：
+### 代理层配置（services/qqmusic-api/.env）
+
+```bash
+# 代理层监听端口
+PORT=3001
+
+# 上游 API 地址
+# Docker 环境
+QQMUSIC_API_BASE=http://qqmusic-upstream:3200
+
+# 本地开发环境
+# QQMUSIC_API_BASE=http://localhost:3200
+```
+
+## 测试 API
+
+### 测试代理层（推荐）
+
+```bash
+# 健康检查
+curl "http://localhost:3001/"
+
+# 搜索歌曲
+curl "http://localhost:3001/search?key=周杰伦&pageSize=5" | jq '.data.song.list[0]'
+
+# 获取歌曲详情
+curl "http://localhost:3001/song?songmid=002w3cVJ4baewp" | jq '.response.songinfo.data.track_info'
+```
+
+### 测试上游 API（调试用）
 
 ```bash
 # 搜索歌曲
-curl "http://localhost:3300/search/song?key=周杰伦"
+curl "http://localhost:3300/getSearchByKey?key=周杰伦&pageSize=5" | jq '.data.song.list[0]'
 
 # 获取歌曲详情
-curl "http://localhost:3300/song?songmid=xxx"
+curl "http://localhost:3300/getSongInfo?songmid=002w3cVJ4baewp" | jq '.data.track_info'
 ```
-
-### API 端点映射
-
-| 功能 | Rain120 API | 本项目需要 |
-|------|-------------|-----------|
-| 搜索 | `/search/song?key=xxx` | `/search?key=xxx` |
-| 详情 | `/song?songmid=xxx` | `/song?songmid=xxx` |
-
-如果端点不匹配，可以在 `server.py` 中添加代理转发。
 
 ## 替代方案
 

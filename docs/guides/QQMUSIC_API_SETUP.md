@@ -1,5 +1,19 @@
 # QQ Music API Setup Guide
 
+> **⚠️ 文档已过时 / DEPRECATED**  
+> 本文档已被更完整的容器化部署指南取代。  
+> 请参考最新文档：[services/qqmusic-api/CONTAINER_SETUP.md](../../services/qqmusic-api/CONTAINER_SETUP.md)
+>
+> **为什么弃用**：
+>
+> - 本文档描述的是手动部署方式，不包含代理层配置
+> - 端点路径和端口配置可能已过时
+> - 新的容器化方案提供更好的隔离和管理
+>
+> **迁移指南**：使用 `./services/qqmusic-api/setup-upstream.sh` 一键部署完整方案
+
+---
+
 Complete guide for configuring QQ Music API integration.
 
 > **Note**: This guide is based on the community-maintained QQ Music API project.
