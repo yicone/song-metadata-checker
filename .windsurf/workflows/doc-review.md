@@ -26,25 +26,30 @@ description: 文档审查检查清单 - 确保文档一致性和准确性
 #### 通用检查原则
 
 **端口号检查**:
+
 ```bash
 # 搜索所有端口引用
 grep -r "PORT_PATTERN" docs/ services/ --exclude-dir=node_modules --exclude-dir=archive
 ```
 
 **API 端点检查**:
+
 ```bash
 # 搜索 API 端点
 grep -r "ENDPOINT_PATTERN" docs/ services/ --exclude-dir=node_modules --exclude-dir=archive
 ```
 
 **环境变量检查**:
+
 ```bash
 # 搜索环境变量配置
 grep -r "ENV_VAR_PATTERN" docs/ services/ --exclude-dir=node_modules
 ```
 
 <!-- BEGIN PROJECT_SPECIFIC -->
+
 **This Project**: See `.windsurf/rules/review-config.md` for:
+
 - Specific port numbers to check
 - API endpoint patterns
 - Environment variable names
@@ -59,6 +64,7 @@ grep -r "ENV_VAR_PATTERN" docs/ services/ --exclude-dir=node_modules
 #### 通用原则
 
 **确认权威文档**:
+
 - Each technical detail type should have ONE authority document
 - Other documents should link to (not duplicate) the authority
 - Authority documents are defined in project configuration
@@ -128,6 +134,7 @@ done
 **问题**: 文档中混用 3200, 3300, 3001 而不说明
 
 **解决**:
+
 - 明确说明每个端口的用途
 - 使用表格展示端口映射
 - 推荐使用代理层 (3001)
@@ -137,6 +144,7 @@ done
 **问题**: 使用旧的端点路径 `/search/song` 而不是 `/getSearchByKey`
 
 **解决**:
+
 - 更新为正确的端点
 - 如果是权威文档，添加端点对照表
 - 如果是归档文档，添加弃用警告
@@ -146,6 +154,7 @@ done
 **问题**: 不同文档推荐不同的环境变量值
 
 **解决**:
+
 - 确认正确的配置
 - 更新所有文档使用一致的推荐值
 - 说明为什么推荐该值
@@ -155,6 +164,7 @@ done
 发现问题后：
 
 1. **评估影响范围**
+
    ```bash
    # 搜索所有受影响的文件
    grep -r "错误的内容" docs/ services/
@@ -238,7 +248,9 @@ done
 ### Project-Specific Configuration
 
 <!-- BEGIN PROJECT_SPECIFIC -->
+
 **See**: `.windsurf/rules/review-config.md` for:
+
 - Detailed check commands with actual patterns
 - Project-specific authority documents
 - Common issues and their fixes

@@ -99,18 +99,18 @@ python server-proxy.py
 
 ### Rain120/qq-music-api 端点
 
-| 功能 | 端点 | 参数 |
-|------|------|------|
+| 功能     | 端点           | 参数                        |
+| -------- | -------------- | --------------------------- |
 | 搜索歌曲 | `/search/song` | `key`, `pageSize`, `pageNo` |
-| 歌曲详情 | `/song` | `songmid` |
-| 歌词 | `/lyric` | `songmid` |
+| 歌曲详情 | `/song`        | `songmid`                   |
+| 歌词     | `/lyric`       | `songmid`                   |
 
 ### 本项目需要的端点
 
-| 功能 | 端点 | 参数 |
-|------|------|------|
+| 功能     | 端点      | 参数                        |
+| -------- | --------- | --------------------------- |
 | 搜索歌曲 | `/search` | `key`, `pageSize`, `pageNo` |
-| 歌曲详情 | `/song` | `songmid` |
+| 歌曲详情 | `/song`   | `songmid`                   |
 
 ## 数据格式示例
 
@@ -125,9 +125,7 @@ python server-proxy.py
         {
           "songmid": "001JD1SR29d8VX",
           "songname": "晴天",
-          "singer": [
-            {"name": "周杰伦"}
-          ],
+          "singer": [{ "name": "周杰伦" }],
           "albumname": "叶惠美",
           "interval": 269
         }
@@ -145,9 +143,7 @@ python server-proxy.py
   "data": {
     "songmid": "001JD1SR29d8VX",
     "songname": "晴天",
-    "singer": [
-      {"name": "周杰伦"}
-    ],
+    "singer": [{ "name": "周杰伦" }],
     "albumname": "叶惠美",
     "albummid": "000MkMni19ClKG",
     "interval": 269
@@ -225,7 +221,7 @@ SPOTIFY_CLIENT_SECRET=your_client_secret
 创建 `docker-compose.yml` 统一管理所有服务：
 
 ```yaml
-version: '3.8'
+version: "3.8"
 services:
   netease-api:
     # ...

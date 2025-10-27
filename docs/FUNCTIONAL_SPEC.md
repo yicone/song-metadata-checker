@@ -223,7 +223,7 @@ The Music Metadata Verification System is an automated workflow built on the Dif
 
 ```typescript
 interface WorkflowInput {
-  song_url: string;           // Required: NetEase Cloud Music URL
+  song_url: string; // Required: NetEase Cloud Music URL
   credits_image_url?: string; // Optional: Production credits image
 }
 ```

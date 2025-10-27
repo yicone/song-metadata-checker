@@ -153,7 +153,7 @@ Expected output:
 
 ```yaml
 ports:
-  - "3001:3000"  # Change 3001 to your preferred port
+  - "3001:3000" # Change 3001 to your preferred port
 ```
 
 Update `.env`:

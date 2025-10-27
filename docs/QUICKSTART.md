@@ -7,10 +7,10 @@ Get the Music Metadata Verification System running in 5 minutes with minimal con
 
 ## 📌 Choose Your Setup / 选择配置方式
 
-| Setup Type | Best For | API Required | Time |
-|------------|----------|--------------|------|
-| **[Standard](#standard-setup-spotify)** | International users | Spotify (official) | ~5 min |
-| **[简化配置](#simplified-setup-qq-music)** | 中国市场用户 | QQ Music (社区 API) | ~5 min |
+| Setup Type                                 | Best For            | API Required        | Time   |
+| ------------------------------------------ | ------------------- | ------------------- | ------ |
+| **[Standard](#standard-setup-spotify)**    | International users | Spotify (official)  | ~5 min |
+| **[简化配置](#simplified-setup-qq-music)** | 中国市场用户        | QQ Music (社区 API) | ~5 min |
 
 ---
 

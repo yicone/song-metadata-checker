@@ -75,6 +75,7 @@ docker-compose up -d
 ## 📚 完整文档
 
 查看 [CONTAINER_SETUP.md](CONTAINER_SETUP.md) 了解：
+
 - 完整的架构说明
 - 详细的故障排除
 - 管理命令

@@ -331,7 +331,7 @@ Gemini API     ────────┘
 
 ```typescript
 interface WorkflowInput {
-  song_url: string;           // Required
+  song_url: string; // Required
   credits_image_url?: string; // Optional
 }
 ```

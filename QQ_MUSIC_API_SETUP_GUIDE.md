@@ -67,18 +67,18 @@ events { worker_connections 1024; }
 http {
     server {
         listen 8888;
-        
+
         # NetEase API
         location /netease/ {
             rewrite ^/netease/(.*) /$1 break;
             proxy_pass http://host.docker.internal:3000;
         }
-        
+
         # QQ Music API - 转发到代理层（推荐）
         location /qqmusic/ {
             proxy_pass http://host.docker.internal:3001/;
         }
-        
+
         # 或直接转发到 Rain120 API（不推荐）
         # location /qqmusic/search {
         #     rewrite ^/qqmusic/search /getSearchByKey break;
@@ -189,7 +189,7 @@ curl "http://localhost:8888/qqmusic/search?key=顽疾&pageSize=5" | jq '.data.so
         {
           "songmid": "real_song_mid",
           "songname": "真实歌曲名",
-          "singer": [{"name": "真实歌手"}],
+          "singer": [{ "name": "真实歌手" }],
           "albumname": "真实专辑"
         }
       ]

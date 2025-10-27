@@ -8,10 +8,10 @@
 
 ### Services Directory
 
-| Service | Directory | Key Files |
-|---------|-----------|-----------|
+| Service      | Directory               | Key Files                                           |
+| ------------ | ----------------------- | --------------------------------------------------- |
 | QQ Music API | `services/qqmusic-api/` | `README.md`, `CONTAINER_SETUP.md`, `QUICK_START.md` |
-| NetEase API | `services/netease-api/` | `README.md`, `docker-compose.yml` |
+| NetEase API  | `services/netease-api/` | `README.md`, `docker-compose.yml`                   |
 
 ### Documentation Structure
 
@@ -35,31 +35,31 @@ docs/
 
 ### Code Structure
 
-| Component | Location | Naming Pattern |
-|-----------|----------|----------------|
-| Python modules | `src/` | `snake_case.py` |
-| Test files | `tests/` | `test_*.py` |
-| Scripts | `scripts/` | `snake_case.py` |
-| Config files | Root | `pyproject.toml`, `.env.example` |
+| Component      | Location   | Naming Pattern                   |
+| -------------- | ---------- | -------------------------------- |
+| Python modules | `src/`     | `snake_case.py`                  |
+| Test files     | `tests/`   | `test_*.py`                      |
+| Scripts        | `scripts/` | `snake_case.py`                  |
+| Config files   | Root       | `pyproject.toml`, `.env.example` |
 
 ## Project-Specific Terminology
 
-| Term | Usage | Example |
-|------|-------|---------|
-| "QQ Music API" | Refers to the dual-layer architecture | "Configure QQ Music API proxy" |
-| "Rain120 API" | Refers to the upstream API specifically | "Rain120 API runs on port 3200" |
-| "Proxy layer" | Refers to the custom proxy service | "Proxy layer exposes port 3001" |
-| "NetEase API" | Refers to NeteaseCloudMusicApi service | "NetEase API provides data source" |
-| "Metadata verification" | Core feature | "Metadata verification workflow" |
+| Term                    | Usage                                   | Example                            |
+| ----------------------- | --------------------------------------- | ---------------------------------- |
+| "QQ Music API"          | Refers to the dual-layer architecture   | "Configure QQ Music API proxy"     |
+| "Rain120 API"           | Refers to the upstream API specifically | "Rain120 API runs on port 3200"    |
+| "Proxy layer"           | Refers to the custom proxy service      | "Proxy layer exposes port 3001"    |
+| "NetEase API"           | Refers to NeteaseCloudMusicApi service  | "NetEase API provides data source" |
+| "Metadata verification" | Core feature                            | "Metadata verification workflow"   |
 
 ## Abbreviations and Acronyms
 
-| Abbreviation | Full Form | Usage |
-|--------------|-----------|-------|
-| API | Application Programming Interface | Always capitalized |
-| SSOT | Single Source of Truth | Documentation principle |
-| OCR | Optical Character Recognition | Gemini API feature |
-| QQ | QQ Music | Chinese music platform |
+| Abbreviation | Full Form                         | Usage                   |
+| ------------ | --------------------------------- | ----------------------- |
+| API          | Application Programming Interface | Always capitalized      |
+| SSOT         | Single Source of Truth            | Documentation principle |
+| OCR          | Optical Character Recognition     | Gemini API feature      |
+| QQ           | QQ Music                          | Chinese music platform  |
 
 ## Version Control
 
@@ -73,6 +73,7 @@ docs/
 ### Commit Messages
 
 Follow conventional commits:
+
 - `feat:` New features
 - `fix:` Bug fixes
 - `docs:` Documentation changes

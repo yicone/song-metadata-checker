@@ -8,11 +8,11 @@
 
 ## 🔗 本地访问地址
 
-| 服务 | URL | 状态 |
-|------|-----|------|
-| **健康检查** | http://localhost:8888/health | ✅ 正常 |
-| **NetEase API** | http://localhost:8888/netease/ | ✅ 正常 |
-| **QQ Music API** | http://localhost:8888/qqmusic/ | ✅ 正常 |
+| 服务             | URL                            | 状态    |
+| ---------------- | ------------------------------ | ------- |
+| **健康检查**     | <http://localhost:8888/health>   | ✅ 正常 |
+| **NetEase API**  | <http://localhost:8888/netease/> | ✅ 正常 |
+| **QQ Music API** | <http://localhost:8888/qqmusic/> | ✅ 正常 |
 
 ## 🧪 测试结果
 
@@ -59,7 +59,8 @@ NETEASE_API_HOST=https://abc123-456-789.ngrok-free.app/netease
 QQ_MUSIC_API_HOST=https://abc123-456-789.ngrok-free.app/qqmusic
 ```
 
-**⚠️ 重要**: 
+**⚠️ 重要**:
+
 - 替换 `abc123-456-789.ngrok-free.app` 为你的实际 ngrok URL
 - URL 末尾包含 `/netease` 和 `/qqmusic` 路径前缀
 
@@ -136,13 +137,13 @@ docker run -d \
 ```nginx
 server {
     listen 8888;
-    
+
     # NetEase API
     location /netease/ {
         rewrite ^/netease/(.*) /$1 break;
         proxy_pass http://host.docker.internal:3000;
     }
-    
+
     # QQ Music API
     location /qqmusic/ {
         rewrite ^/qqmusic/(.*) /$1 break;

@@ -39,7 +39,7 @@ def main(...):
         "song_title": "...",
         "artists": [...]
     }
-    
+
     return {
         "metadata": metadata,           # 完整对象（供参考）
         "song_title": metadata["song_title"],  # 平铺输出
@@ -126,12 +126,12 @@ events {
 http {
     server {
         listen 8080;
-        
+
         # NetEase API - 路径前缀 /netease
         location /netease/ {
             proxy_pass http://host.docker.internal:3000/;
         }
-        
+
         # QQ Music API - 路径前缀 /qqmusic
         location /qqmusic/ {
             proxy_pass http://host.docker.internal:3001/;
@@ -238,11 +238,11 @@ ingress:
   # NetEase API
   - hostname: netease-api.yourdomain.com
     service: http://localhost:3000
-  
+
   # QQ Music API
   - hostname: qqmusic-api.yourdomain.com
     service: http://localhost:3001
-  
+
   # 默认规则（必需）
   - service: http_status:404
 EOF
@@ -298,12 +298,12 @@ ngrok http 3001 --subdomain=qqmusic-api &
 
 ## 🎯 推荐方案总结
 
-| 场景 | 推荐方案 | 理由 |
-|------|---------|------|
-| **快速测试（1-2 天）** | Nginx + ngrok 免费版 | 最快，零成本 |
+| 场景                   | 推荐方案             | 理由                 |
+| ---------------------- | -------------------- | -------------------- |
+| **快速测试（1-2 天）** | Nginx + ngrok 免费版 | 最快，零成本         |
 | **短期开发（1-2 周）** | Nginx + ngrok 免费版 | 够用，手动重启可接受 |
-| **长期开发（1+ 月）** | Cloudflare Tunnel | 稳定，免费，不断线 |
-| **生产环境** | 云服务器部署 | 完全控制，高可用 |
+| **长期开发（1+ 月）**  | Cloudflare Tunnel    | 稳定，免费，不断线   |
+| **生产环境**           | 云服务器部署         | 完全控制，高可用     |
 
 ---
 
@@ -377,11 +377,11 @@ def main(netease_song_details: str, netease_lyrics_data: str) -> dict:
     try:
         netease_song_dict = json.loads(netease_song_details)
         netease_lyrics_dict = json.loads(netease_lyrics_data)
-        
+
         songs = netease_song_dict.get('songs', [])
         if not songs:
             return {"metadata": {}, "success": False, "error": "未找到歌曲信息"}
-        
+
         song = songs[0]
         metadata = {
             "song_id": str(song.get('id', '')),
@@ -393,12 +393,12 @@ def main(netease_song_details: str, netease_lyrics_data: str) -> dict:
             "lyrics": netease_lyrics_dict.get('lrc', {}).get('lyric', ''),
             "source": "NetEase Cloud Music"
         }
-        
+
         # 构建搜索关键词（歌名 + 第一个艺术家）
         search_key = metadata["song_title"]
         if metadata["artists"]:
             search_key += " " + metadata["artists"][0]
-        
+
         return {
             "metadata": metadata,
             "song_title": metadata["song_title"],
@@ -407,7 +407,7 @@ def main(netease_song_details: str, netease_lyrics_data: str) -> dict:
             "album": metadata["album"],
             "success": True
         }
-    
+
     except Exception as e:
         return {"metadata": {}, "success": False, "error": str(e)}
 ```
@@ -469,6 +469,7 @@ curl -G "http://localhost:8888/qqmusic/search" \
 代码节点报错，无法访问 `search_results.data`
 
 **响应示例**:
+
 ```json
 {
   "body": "{\"code\":0,\"data\":{\"song\":{\"list\":[...]}}}\n",
@@ -492,25 +493,25 @@ def main(search_results: str, target_title: str, target_artists: str) -> dict:
             search_data = json.loads(search_results)
         else:
             search_data = search_results
-        
+
         # 第二步：提取数据（注意路径是 data.song.list）
         results = search_data.get('data', {}).get('song', {}).get('list', [])
-        
+
         if not results:
             return {
                 "match_id": "",
                 "match_found": False,
                 "error": "搜索无结果"
             }
-        
+
         best_match = results[0]
-        
+
         return {
             "match_id": best_match.get('songmid', ''),
             "match_name": best_match.get('songname', ''),  # Unicode 自动解码
             "match_found": True
         }
-    
+
     except Exception as e:
         return {
             "match_id": "",
@@ -520,6 +521,7 @@ def main(search_results: str, target_title: str, target_artists: str) -> dict:
 ```
 
 **关键点**:
+
 - ✅ 参数类型改为 `str`（不是 `dict`）
 - ✅ 使用 `json.loads()` 解析字符串
 - ✅ 数据路径是 `data.song.list`（不是 `data.list`）

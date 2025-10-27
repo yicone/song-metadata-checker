@@ -204,12 +204,12 @@ git commit --no-verify -m "docs: emergency fix"
 
 Typical commit times:
 
-| Check | Time | Frequency |
-|-------|------|-----------|
-| lint-staged | < 5s | Always |
-| Markdown linting | < 10s | If `.md` staged |
-| Link checking | < 15s | Always |
-| AI review | 30-60s | Optional (default: on) |
+| Check            | Time   | Frequency              |
+| ---------------- | ------ | ---------------------- |
+| lint-staged      | < 5s   | Always                 |
+| Markdown linting | < 10s  | If `.md` staged        |
+| Link checking    | < 15s  | Always                 |
+| AI review        | 30-60s | Optional (default: on) |
 
 **Total**: ~30s (without AI) or ~90s (with AI)
 
@@ -242,7 +242,7 @@ Edit `package.json`:
   "lint-staged": {
     "*.md": ["markdownlint --fix"],
     "*.py": ["ruff check --fix", "ruff format"],
-    "*.json": ["prettier --write"]  // Add new type
+    "*.json": ["prettier --write"] // Add new type
   }
 }
 ```
@@ -294,18 +294,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-      
+          node-version: "18"
+
       - name: Install pnpm
         run: npm install -g pnpm
-      
+
       - name: Install dependencies
         run: pnpm install
-      
+
       - name: Run all checks
         run: |
           pnpm lint:md

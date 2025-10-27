@@ -254,24 +254,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-      
+          node-version: "18"
+
       - name: Install pnpm
         run: npm install -g pnpm
-      
+
       - name: Install dependencies
         run: pnpm install
-      
+
       - name: Lint markdown
         run: pnpm lint:md
-      
+
       - name: Check links
         run: ./scripts/check-links.sh
-      
+
       - name: AI documentation review
         run: ./scripts/doc-agent-check.sh quick
 ```

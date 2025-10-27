@@ -130,15 +130,15 @@ services:
   qqmusic-api:
     environment:
       - PORT=3001
-      - QQMUSIC_API_BASE=http://qqmusic-upstream:3300  # 上游 API 地址
+      - QQMUSIC_API_BASE=http://qqmusic-upstream:3300 # 上游 API 地址
 ```
 
 ### 端口映射
 
-| 服务 | 容器端口 | 主机端口 | 用途 |
-|------|---------|---------|------|
-| qqmusic-upstream | 3300 | 3300 | Rain120 API（可选暴露） |
-| qqmusic-api | 3001 | 3001 | 代理 API（主要使用） |
+| 服务             | 容器端口 | 主机端口 | 用途                    |
+| ---------------- | -------- | -------- | ----------------------- |
+| qqmusic-upstream | 3300     | 3300     | Rain120 API（可选暴露） |
+| qqmusic-api      | 3001     | 3001     | 代理 API（主要使用）    |
 
 ### 数据卷
 
@@ -187,13 +187,13 @@ events { worker_connections 1024; }
 http {
     server {
         listen 8888;
-        
+
         # NetEase API
         location /netease/ {
             rewrite ^/netease/(.*) /$1 break;
             proxy_pass http://host.docker.internal:3000;
         }
-        
+
         # QQ Music API - 使用代理层
         location /qqmusic/ {
             rewrite ^/qqmusic/(.*) /$1 break;

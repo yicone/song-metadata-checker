@@ -91,7 +91,7 @@ from urllib.parse import urlparse, parse_qs
 def main(song_url: str) -> dict:
     """
     从网易云音乐 URL 中提取歌曲 ID
-    
+
     支持格式:
     - https://music.163.com#/song?id=2758218600
     - https://music.163.com/song?id=2758218600
@@ -100,11 +100,11 @@ def main(song_url: str) -> dict:
         # 处理 # 号
         if '#' in song_url:
             song_url = song_url.split('#')[1]
-        
+
         # 解析 URL
         parsed = urlparse(song_url)
         query_params = parse_qs(parsed.query)
-        
+
         # 提取 ID
         if 'id' in query_params:
             song_id = query_params['id'][0]
@@ -118,7 +118,7 @@ def main(song_url: str) -> dict:
                 "success": False,
                 "error": "URL 中未找到 id 参数"
             }
-    
+
     except Exception as e:
         return {
             "song_id": "",
@@ -204,9 +204,9 @@ def main(netease_song_details: str, netease_lyrics_data: str) -> dict:
                 "success": False,
                 "error": "未找到歌曲信息"
             }
-        
+
         song = songs[0]
-        
+
         # 构建元数据
         metadata = {
             "song_id": str(song.get('id', '')),
@@ -218,12 +218,12 @@ def main(netease_song_details: str, netease_lyrics_data: str) -> dict:
             "lyrics": netease_lyrics_dict.get('lrc', {}).get('lyric', ''),
             "source": "NetEase Cloud Music"
         }
-        
+
         # 构建搜索关键词（歌名 + 第一个艺术家）
         search_key = metadata["song_title"]
         if metadata["artists"]:
             search_key += " " + metadata["artists"][0]
-        
+
         return {
             "metadata": metadata,
             "song_title": metadata["song_title"],
@@ -232,7 +232,7 @@ def main(netease_song_details: str, netease_lyrics_data: str) -> dict:
             "album": metadata["album"],
             "success": True
         }
-    
+
     except Exception as e:
         return {
             "metadata": {},
@@ -310,18 +310,18 @@ def main(search_results: str, target_title: str, target_artists: str) -> dict:
             search_data = json.loads(search_results)
         else:
             search_data = search_results
-        
+
         # 调试：输出完整响应结构
         print(f"QQ Music API 响应: {json.dumps(search_data, ensure_ascii=False, indent=2)}")
-        
+
         # 提取搜索结果列表
         # 注意：QQ Music API 的数据结构是 response.data.song.list
         results = search_data.get('response', {}).get('data', {}).get('song', {}).get('list', [])
-        
+
         print(f"搜索结果数量: {len(results)}")
         if results:
             print(f"第一个结果: {json.dumps(results[0], ensure_ascii=False)}")
-        
+
         if not results:
             return {
                 "match_id": "",
@@ -329,18 +329,18 @@ def main(search_results: str, target_title: str, target_artists: str) -> dict:
                 "error": "搜索无结果",
                 "debug_data": search_data  # 调试：返回原始数据
             }
-        
+
         # 简单匹配：取第一个结果
         # TODO: 实现更复杂的匹配算法（比较歌名和艺术家相似度）
         best_match = results[0]
-        
+
         return {
             "match_id": best_match.get('songmid', ''),
             "match_name": best_match.get('songname', ''),  # Unicode 会自动解码
             "match_album": best_match.get('albumname', ''),
             "match_found": True
         }
-    
+
     except Exception as e:
         return {
             "match_id": "",
@@ -424,9 +424,9 @@ def main(netease_data: dict, qqmusic_data: str = None) -> dict:
                 qqmusic_parsed = json.loads(qqmusic_data)
             else:
                 qqmusic_parsed = qqmusic_data
-        
+
         fields = {}
-        
+
         # 核验标题
         netease_title = netease_data.get('song_title', '')
         fields['title'] = {
@@ -434,19 +434,19 @@ def main(netease_data: dict, qqmusic_data: str = None) -> dict:
             "status": "未查到",
             "source": "NetEase"
         }
-        
+
         if qqmusic_parsed:
             # 注意路径：response.songinfo.data.track_info
             track_info = qqmusic_parsed.get('response', {}).get('songinfo', {}).get('data', {}).get('track_info', {})
             qqmusic_title = track_info.get('name', '')
-            
+
             if qqmusic_title and qqmusic_title.lower() == netease_title.lower():
                 fields['title']['status'] = "确认"
                 fields['title']['confirmed_by'] = ["QQ Music"]
             elif qqmusic_title:
                 fields['title']['status'] = "存疑"
                 fields['title']['qqmusic_value'] = qqmusic_title
-        
+
         # 核验艺术家
         netease_artists = netease_data.get('artists', [])
         fields['artists'] = {
@@ -454,11 +454,11 @@ def main(netease_data: dict, qqmusic_data: str = None) -> dict:
             "status": "未查到",
             "source": "NetEase"
         }
-        
+
         if qqmusic_parsed:
             track_info = qqmusic_parsed.get('response', {}).get('songinfo', {}).get('data', {}).get('track_info', {})
             qqmusic_artists = [
-                s.get('name', '') 
+                s.get('name', '')
                 for s in track_info.get('singer', [])
             ]
             if qqmusic_artists and set(qqmusic_artists) == set(netease_artists):
@@ -467,12 +467,12 @@ def main(netease_data: dict, qqmusic_data: str = None) -> dict:
             elif qqmusic_artists:
                 fields['artists']['status'] = "存疑"
                 fields['artists']['qqmusic_value'] = qqmusic_artists
-        
+
         # 生成摘要
         confirmed = sum(1 for f in fields.values() if f.get('status') == '确认')
         questionable = sum(1 for f in fields.values() if f.get('status') == '存疑')
         not_found = sum(1 for f in fields.values() if f.get('status') == '未查到')
-        
+
         report = {
             "metadata": {
                 "song_id": netease_data.get('song_id', ''),
@@ -488,13 +488,13 @@ def main(netease_data: dict, qqmusic_data: str = None) -> dict:
                 "confidence_score": confirmed / len(fields) if fields else 0
             }
         }
-        
+
         return {
             "final_report": report,
             "success": True,
             "error": ""  # 成功时返回空字符串
         }
-    
+
     except Exception as e:
         return {
             "final_report": {},
@@ -610,12 +610,12 @@ events {
 http {
     server {
         listen 8080;
-        
+
         # NetEase API
         location /netease/ {
             proxy_pass http://localhost:3000/;
         }
-        
+
         # QQ Music API
         location /qqmusic/ {
             proxy_pass http://localhost:3001/;

@@ -147,29 +147,31 @@
 
 在 `services/qqmusic-api/README.md` 中添加：
 
-```markdown
+````markdown
 ## 端点对照表
 
 ### Rain120 API (上游) vs 代理层
 
-| 功能 | Rain120 端点 | 代理层端点 | 说明 |
-|------|-------------|-----------|------|
-| 搜索歌曲 | `/getSearchByKey?key=xxx` | `/search?key=xxx` | 代理层简化参数 |
+| 功能     | Rain120 端点               | 代理层端点          | 说明             |
+| -------- | -------------------------- | ------------------- | ---------------- |
+| 搜索歌曲 | `/getSearchByKey?key=xxx`  | `/search?key=xxx`   | 代理层简化参数   |
 | 歌曲详情 | `/getSongInfo?songmid=xxx` | `/song?songmid=xxx` | 代理层统一端点名 |
 
 ### 端口映射
 
-| 服务 | 容器内端口 | 主机端口 | 用途 |
-|------|-----------|---------|------|
-| qqmusic-upstream (Rain120) | 3200 | 3300 | 上游 API（可选直接访问）|
-| qqmusic-api (代理) | 3001 | 3001 | **推荐使用** |
+| 服务                       | 容器内端口 | 主机端口 | 用途                     |
+| -------------------------- | ---------- | -------- | ------------------------ |
+| qqmusic-upstream (Rain120) | 3200       | 3300     | 上游 API（可选直接访问） |
+| qqmusic-api (代理)         | 3001       | 3001     | **推荐使用**             |
 
 **推荐配置**:
+
 ```env
 QQ_MUSIC_API_HOST=http://localhost:3001  # 使用代理层
 ```
+````
 
-```
+````
 
 ### 阶段 4: 预防措施
 
@@ -212,7 +214,7 @@ grep -r "/song?" docs/ services/qqmusic-api/ --exclude-dir=node_modules
 
 # 4. 测试所有文档中的命令
 # 逐个执行文档中的 curl 命令
-```
+````
 
 ## 责任
 

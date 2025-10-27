@@ -8,6 +8,7 @@
     "lint:md": "markdownlint '**/*.md' --ignore node_modules --ignore .venv --ignore services/qqmusic-api/node_modules --ignore services/netease-api/node_modules",
     "lint:md:fix": "markdownlint '**/*.md' --ignore node_modules --ignore .venv --ignore services/qqmusic-api/node_modules --ignore services/netease-api/node_modules --fix",
     "format:md": "prettier --check '**/*.md'",
+    "format:md:fix": "prettier --write '**/*.md'",
     "doc:check": "DOC_AI_CHECK=true ./scripts/doc-agent-check.sh standard",
     "doc:check:quick": "./scripts/doc-agent-check.sh quick",
     "doc:check:full": "./scripts/doc-agent-check.sh deep",

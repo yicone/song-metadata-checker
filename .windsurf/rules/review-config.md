@@ -46,18 +46,19 @@ grep -r "QQ_MUSIC_API_HOST\|QQMUSIC_API_BASE\|NETEASE_API_HOST\|GEMINI_API" docs
 
 Must match `.windsurf/rules/doc-authorities.md`:
 
-| Type | Authority Document |
-|------|-------------------|
-| QQ Music API Setup | `services/qqmusic-api/CONTAINER_SETUP.md` |
-| Port Mappings | `services/qqmusic-api/README.md` |
-| Environment Variables | `docs/FUNCTIONAL_SPEC.md` |
-| Deployment | `docs/guides/DEPLOYMENT.md` |
+| Type                  | Authority Document                        |
+| --------------------- | ----------------------------------------- |
+| QQ Music API Setup    | `services/qqmusic-api/CONTAINER_SETUP.md` |
+| Port Mappings         | `services/qqmusic-api/README.md`          |
+| Environment Variables | `docs/FUNCTIONAL_SPEC.md`                 |
+| Deployment            | `docs/guides/DEPLOYMENT.md`               |
 
 ## Common Issues in This Project
 
 ### Issue: Port 3300 vs 3001 Confusion
 
 **Check**:
+
 ```bash
 grep -r "QQ_MUSIC_API_HOST.*3300" docs/ services/
 ```
@@ -67,6 +68,7 @@ grep -r "QQ_MUSIC_API_HOST.*3300" docs/ services/
 ### Issue: Old Endpoint Paths
 
 **Check**:
+
 ```bash
 grep -r "/search/song\|/song/detail" docs/ services/ --exclude-dir=archive
 ```
@@ -76,6 +78,7 @@ grep -r "/search/song\|/song/detail" docs/ services/ --exclude-dir=archive
 ### Issue: Missing Deprecation Warnings
 
 **Check**:
+
 ```bash
 for file in docs/archive/*.md; do
   if ! head -20 "$file" | grep -q "ARCHIVED\|已归档\|DEPRECATED\|已过时"; then
@@ -124,8 +127,8 @@ grep -rl "localhost:3300" docs/ | xargs sed -i '' 's/localhost:3300/localhost:30
 ```bash
 # Template for archived docs
 cat > /tmp/deprecation.txt << 'EOF'
-> **⚠️ 文档已归档 / ARCHIVED**  
-> 本文档已过时，仅供历史参考。  
+> **⚠️ 文档已归档 / ARCHIVED**
+> 本文档已过时，仅供历史参考。
 > **请参考最新文档**: [链接到新文档]
 >
 > **主要问题**: [列出过时的原因]
