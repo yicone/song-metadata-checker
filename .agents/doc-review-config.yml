@@ -1,0 +1,156 @@
+# AI Agent Documentation Review Configuration
+# This configuration defines how AI agents should review documentation changes
+
+# Agent to use (codex-cli, gemini-cli, or custom)
+agent: "gemini-cli"
+
+# Context files that agents should read to understand the project
+context_files:
+  - "AGENTS.md" # Agent collaboration protocol
+  - "docs/DOCUMENTATION_MANAGEMENT.md" # Documentation rules and SSOT
+  - "docs/NAMING_CONVENTIONS.md" # Naming standards
+  - "docs/DOCUMENTATION_SYSTEM_SUMMARY.md" # Quick system overview
+
+# Check definitions
+checks:
+  # Quick checks (<5 seconds) - Run on pre-commit
+  quick:
+    - name: "Broken Links"
+      description: "Check for broken internal links"
+      command: "./scripts/check-links.sh"
+      blocking: true
+      timeout: 5
+
+    - name: "File Naming Convention"
+      description: "Verify file names follow conventions"
+      prompt: |
+        Check if the changed files follow naming conventions from docs/NAMING_CONVENTIONS.md:
+        - Documentation files: UPPERCASE.md or kebab-case.md
+        - Fix files: YYYY-MM-DD-description.md
+        - Template files: name-template.md
+
+        Output: ✅ PASS or ❌ FAIL with specific violations
+      blocking: true
+      timeout: 5
+
+  # Standard checks (5-15 seconds) - Run on pre-push or manual
+  standard:
+    - name: "SSOT Violations"
+      description: "Check for Single Source of Truth violations"
+      prompt: |
+        Review the changed documentation files for SSOT violations.
+
+        Reference the authority mapping in docs/DOCUMENTATION_MANAGEMENT.md.
+
+        Check for:
+        1. Duplicate detailed content (>30% overlap without summary+link pattern)
+        2. Authority documents being referenced instead of being the source
+        3. Missing links to authority documents when summarizing
+
+        Output format:
+        - ✅ PASS: No SSOT violations found
+        - ⚠️ WARNING: [file] - [potential issue]
+        - ❌ FAIL: [file] - [clear violation with details]
+      blocking: false
+      timeout: 15
+
+    - name: "Content Duplication"
+      description: "Detect duplicate content across files"
+      prompt: |
+        Check for duplicate content across documentation files.
+
+        Acceptable patterns:
+        - Brief summary (2-3 sentences) + link to detailed content
+        - Code examples that are identical by necessity
+
+        Flag duplications:
+        - >30% content overlap without proper cross-referencing
+        - Detailed explanations repeated in multiple files
+
+        Output: List any problematic duplications with file names and severity
+      blocking: false
+      timeout: 15
+
+    - name: "Documentation Structure"
+      description: "Verify documentation follows structure guidelines"
+      prompt: |
+        Check if the documentation follows the structure defined in:
+        - docs/DOCUMENTATION_MANAGEMENT.md#documentation-structure
+
+        Verify:
+        1. Files are in correct directories
+        2. Required sections are present (for new files)
+        3. Proper use of headings and hierarchy
+
+        Output: ✅ PASS or ⚠️ WARNING with suggestions
+      blocking: false
+      timeout: 10
+
+  # Deep checks (15-60 seconds) - Run on PR or manual full audit
+  deep:
+    - name: "Full Documentation Audit"
+      description: "Comprehensive documentation quality check"
+      prompt: |
+        Perform a comprehensive documentation audit using the checklist from:
+        docs/DOCUMENTATION_MANAGEMENT.md#quality-checklist
+
+        Check all aspects:
+        1. SSOT compliance
+        2. Link integrity
+        3. Naming conventions
+        4. Audience appropriateness
+        5. Index updates
+        6. CHANGELOG updates (if needed)
+
+        Provide a detailed report with:
+        - Overall score (1-10)
+        - Issues found (categorized by severity)
+        - Recommendations for improvement
+      blocking: false
+      timeout: 60
+
+# Trigger configurations
+triggers:
+  pre_commit:
+    enabled: true
+    level: "quick"
+    timeout: 10
+    skip_on_message: "[skip-doc-check]"
+
+  pre_push:
+    enabled: false # Disabled by default, can be enabled
+    level: "standard"
+    timeout: 30
+    skip_on_message: "[skip-doc-check]"
+
+  manual:
+    level: "standard" # Default for manual runs
+    timeout: 30
+
+  pull_request:
+    level: "deep"
+    timeout: 120
+
+# Environment variables
+env:
+  # Set DOC_AI_CHECK=false to disable AI checks
+  enable_check: "${DOC_AI_CHECK:-true}"
+
+  # Agent-specific settings
+  gemini_model: "gemini-pro"
+  codex_model: "gpt-4"
+
+  # Verbosity
+  verbose: "${DOC_CHECK_VERBOSE:-false}"
+
+# Output settings
+output:
+  format: "console" # console, json, markdown
+  save_to_file: false
+  file_path: ".doc-review-result.txt"
+
+  # Color output
+  colors:
+    pass: "green"
+    warning: "yellow"
+    fail: "red"

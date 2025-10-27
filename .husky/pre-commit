@@ -1,0 +1,46 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Run lint-staged for code formatting
+pnpm lint-staged
+
+# Documentation checks
+echo ""
+echo "📚 Running documentation checks..."
+
+# 1. Markdown linting (fast, always run)
+if git diff --cached --name-only | grep -q '\.md$'; then
+    echo "  🔍 Linting markdown files..."
+    # pnpm lint:md || {
+    #     echo "  ❌ Markdown linting failed"
+    #     exit 1
+    # }
+fi
+
+# 2. Link checking (fast, always run)
+echo "  🔗 Checking documentation links..."
+./scripts/check-links.sh || {
+    echo "  ❌ Link check failed"
+    exit 1
+}
+
+# 3. AI documentation review (optional, controlled by DOC_AI_CHECK)
+if [ "$DOC_AI_CHECK" != "false" ]; then
+    echo "  🤖 Running AI documentation review..."
+    ./scripts/doc-agent-check.sh quick || {
+        echo ""
+        echo "  ❌ AI documentation check failed"
+        echo ""
+        echo "  💡 Tips:"
+        echo "     - Review the issues above and fix them"
+        echo "     - To skip AI checks: DOC_AI_CHECK=false git commit"
+        echo "     - To skip all checks: git commit --no-verify"
+        echo ""
+        exit 1
+    }
+else
+    echo "  ℹ️  AI documentation checks disabled (DOC_AI_CHECK=false)"
+fi
+
+echo ""
+echo "✅ All documentation checks passed!"

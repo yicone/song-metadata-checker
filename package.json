@@ -1,0 +1,36 @@
+{
+  "name": "song-metadata-checker",
+  "version": "0.1.0",
+  "description": "Song metadata verification tool",
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "lint:md": "markdownlint '**/*.md' --ignore node_modules --ignore .venv --ignore services/qqmusic-api/node_modules --ignore services/netease-api/node_modules",
+    "lint:md:fix": "markdownlint '**/*.md' --ignore node_modules --ignore .venv --ignore services/qqmusic-api/node_modules --ignore services/netease-api/node_modules --fix",
+    "format:md": "prettier --check '**/*.md'",
+    "doc:check": "DOC_AI_CHECK=true ./scripts/doc-agent-check.sh standard",
+    "doc:check:quick": "./scripts/doc-agent-check.sh quick",
+    "doc:check:full": "./scripts/doc-agent-check.sh deep",
+    "doc:links": "./scripts/check-links.sh"
+  },
+  "lint-staged": {
+    "*.md": [
+      "markdownlint --fix"
+    ],
+    "*.py": [
+      "ruff check --fix",
+      "ruff format"
+    ]
+  },
+  "devDependencies": {
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.0",
+    "markdownlint-cli": "^0.39.0",
+    "prettier": "^3.6.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}
