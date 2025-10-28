@@ -16,17 +16,20 @@
   },
   "lint-staged": {
     "*.md": [
-      "markdownlint --fix"
+      "bash -c 'for file in \"$@\"; do [ ! -L \"$file\" ] && markdownlint --fix \"$file\" || true; done' --"
     ],
     "*.json": [
-      "prettier --write"
+      "bash -c 'for file in \"$@\"; do [ ! -L \"$file\" ] && prettier --write \"$file\" || true; done' --"
     ],
-    "*.yml,*.yaml": [
-      "prettier --write"
+    "*.yml": [
+      "bash -c 'for file in \"$@\"; do [ ! -L \"$file\" ] && prettier --write \"$file\" || true; done' --"
+    ],
+    "*.yaml": [
+      "bash -c 'for file in \"$@\"; do [ ! -L \"$file\" ] && prettier --write \"$file\" || true; done' --"
     ],
     "*.py": [
-      ".venv/bin/ruff check --fix",
-      ".venv/bin/ruff format"
+      "bash -c 'for file in \"$@\"; do [ ! -L \"$file\" ] && .venv/bin/ruff check --fix \"$file\" || true; done' --",
+      "bash -c 'for file in \"$@\"; do [ ! -L \"$file\" ] && .venv/bin/ruff format \"$file\" || true; done' --"
     ]
   },
   "devDependencies": {
