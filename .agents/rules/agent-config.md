@@ -4,17 +4,17 @@ trigger: manual
 
 # Agent Configuration
 
-> **Project**: song-metadata-checker  
-> **Last Updated**: 2025-10-27
 > **Referenced By**: `AGENTS.md`
 
 ## Agent Responsibilities
 
 ### [tooling-agent]
 
+<!-- Example for a Python project. Adapt for your tech stack (e.g., package.json for Node.js, pom.xml for Java). -->
+
 **Configurations to Maintain**:
 
-- `pyproject.toml` - Python dependencies and tool configs
+- `pyproject.toml` - Project dependencies and tool configurations
 
 **Tool-Specific Rules**:
 
@@ -23,9 +23,9 @@ trigger: manual
 
 **Handoff Checklist**:
 
-- [ ] Run `ruff check .`
-- [ ] Run `mypy .`
-- [ ] Ensure all tests pass
+- [ ] Run linter (`ruff check .`)
+- [ ] Run type checker (`mypy .`)
+- [ ] Ensure all tests pass (`pytest`)
 
 ---
 
@@ -45,7 +45,7 @@ trigger: manual
 4. Keep documentation synced with code changes
 5. Perform weekly/monthly/quarterly maintenance tasks
 
-**Authority Documents** (See `.windsurf/rules/doc-authorities.md`):
+**Authority Documents**: See `.agents/rules/doc-authorities.md` for the complete mapping.
 
 - QQ Music API: `services/qqmusic-api/CONTAINER_SETUP.md`
 - Deployment: `docs/guides/DEPLOYMENT.md`
@@ -70,9 +70,9 @@ trigger: manual
 
 ### With Human Developers
 
-- Use `docs/FIXES_INDEX.md` to communicate completed fixes
-- Create detailed fix docs in `docs/fixes/` for complex issues
-- Update `CHANGELOG.md` for user-facing changes
+- Use `docs/FIXES_INDEX.md` to communicate completed fixes.
+- Create detailed fix docs in `docs/fixes/` for complex issues.
+- Update `CHANGELOG.md` for user-facing changes.
 
 ---
 
@@ -90,6 +90,8 @@ trigger: manual
 
 ## Notes
 
-- Keep `.gitignore` exclusions in sync with repo tooling
-- When updating shared types, change both TypeScript types and Prisma models (if applicable)
-- Document major architectural decisions in `README.md` alongside `AGENTS.md`
+<!-- Add any project-specific notes for agent collaboration here. -->
+
+- Keep `.gitignore` exclusions in sync with repo tooling.
+- When updating shared types, ensure consistency across the stack (e.g., backend models and frontend types).
+- Document major architectural decisions in `README.md` alongside `AGENTS.md`.

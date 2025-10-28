@@ -1,12 +1,14 @@
 # Naming Conventions - Project Configuration
 
-> **Project**: song-metadata-checker  
-> **Last Updated**: 2025-10-27
 > **Referenced By**: `docs/NAMING_CONVENTIONS.md`
 
 ## Project-Specific File Names
 
-### Services Directory
+<!-- 
+Instructions: Document the naming conventions for your project's key directories and files.
+-->
+
+### Services / Modules
 
 | Service      | Directory               | Key Files                                           |
 | ------------ | ----------------------- | --------------------------------------------------- |
@@ -14,6 +16,8 @@
 | NetEase API  | `services/netease-api/` | `README.md`, `docker-compose.yml`                   |
 
 ### Documentation Structure
+
+<!-- This should reflect the structure defined in docs/DOCUMENTATION_MANAGEMENT.md -->
 
 ```
 docs/
@@ -35,6 +39,8 @@ docs/
 
 ### Code Structure
 
+<!-- Adapt this table to your project's language and framework -->
+
 | Component      | Location   | Naming Pattern                   |
 | -------------- | ---------- | -------------------------------- |
 | Python modules | `src/`     | `snake_case.py`                  |
@@ -43,6 +49,11 @@ docs/
 | Config files   | Root       | `pyproject.toml`, `.env.example` |
 
 ## Project-Specific Terminology
+
+<!-- 
+Instructions: Define terms, codenames, or concepts that are unique to your project. 
+This helps everyone (especially AI agents) use consistent language.
+-->
 
 | Term                    | Usage                                   | Example                            |
 | ----------------------- | --------------------------------------- | ---------------------------------- |
@@ -53,6 +64,8 @@ docs/
 | "Metadata verification" | Core feature                            | "Metadata verification workflow"   |
 
 ## Abbreviations and Acronyms
+
+<!-- Instructions: List common abbreviations to ensure consistency. -->
 
 | Abbreviation | Full Form                         | Usage                   |
 | ------------ | --------------------------------- | ----------------------- |
@@ -82,6 +95,8 @@ Follow conventional commits:
 - `chore:` Maintenance tasks
 
 ## Examples from This Project
+
+<!-- Instructions: Provide good and bad examples of names from your project to make the rules concrete. -->
 
 ### Good Examples
 

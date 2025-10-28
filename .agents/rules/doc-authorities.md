@@ -1,10 +1,15 @@
 # Authority Documents Mapping
 
-> **Project**: song-metadata-checker  
-> **Last Updated**: 2025-10-27
 > **Referenced By**: `docs/DOCUMENTATION_MANAGEMENT.md`
 
 ## Technical Details Authority Documents
+
+<!-- 
+Instructions: Fill this table with technical topics and their single source of truth (SSOT).
+- Type: The kind of technical information (e.g., 'API Port Mappings', 'Environment Variables').
+- Authority Document: The ONE file that authoritatively defines this information.
+- Purpose: A brief explanation of what the document covers.
+-->
 
 | Type                  | Authority Document                        | Purpose                          |
 | --------------------- | ----------------------------------------- | -------------------------------- |
@@ -18,13 +23,20 @@
 
 ## Feature Documentation Authority
 
+<!-- 
+Instructions: Map major features or business domains to their authority documents.
+-->
+
 | Feature Area          | Authority Document                       | Purpose                 |
 | --------------------- | ---------------------------------------- | ----------------------- |
 | Metadata Verification | `docs/FUNCTIONAL_SPEC.md`                | Core verification logic |
 | API Integration       | `docs/FUNCTIONAL_SPEC.md`                | External API usage      |
-| Dify Integration      | `docs/guides/DIFY_CLOUD_MANUAL_SETUP.md` | Dify setup and config   |
 
 ## Process Documentation Authority
+
+<!-- 
+Instructions: Map key development processes to their authority documents.
+-->
 
 | Process              | Authority Document          | Purpose                             |
 | -------------------- | --------------------------- | ----------------------------------- |
@@ -43,6 +55,10 @@ When adding new technical components:
 4. Ensure other docs link to (not duplicate) the authority
 
 ## Verification Commands
+
+<!--
+Instructions: Add shell commands to help verify that the SSOT rules defined above are being followed.
+These commands can be used in a CI/CD pipeline or a local review workflow.
 
 ```bash
 # Check for duplicate technical details

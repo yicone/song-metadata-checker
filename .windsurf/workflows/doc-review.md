@@ -1,11 +1,12 @@
 ---
 description: 文档审查检查清单 - 确保文档一致性和准确性
+auto_execution_mode: 1
 ---
 
 # 文档审查检查清单
 
 > **🔄 Reusable Template**: This workflow follows a template pattern for cross-project use  
-> **📍 Project Config**: See `.windsurf/rules/review-config.md` for project-specific checks  
+> **📍 Project Config**: See `.agents/rules/review-config.md` for project-specific checks  
 > **🤖 AI Agent Compatible**: Can be executed by AI agents or manually
 
 本工作流程用于审查文档更新，确保符合项目文档管理规范。
@@ -21,7 +22,7 @@ description: 文档审查检查清单 - 确保文档一致性和准确性
 
 ### 1. 技术细节一致性检查
 
-> **📖 Project-Specific Checks**: See `.windsurf/rules/review-config.md` for detailed check commands
+> **📖 Project-Specific Checks**: See `.agents/rules/review-config.md` for detailed check commands
 
 #### 通用检查原则
 
@@ -48,7 +49,7 @@ grep -r "ENV_VAR_PATTERN" docs/ services/ --exclude-dir=node_modules
 
 <!-- BEGIN PROJECT_SPECIFIC -->
 
-**This Project**: See `.windsurf/rules/review-config.md` for:
+**This Project**: See `.agents/rules/review-config.md` for:
 
 - Specific port numbers to check
 - API endpoint patterns
@@ -59,7 +60,7 @@ grep -r "ENV_VAR_PATTERN" docs/ services/ --exclude-dir=node_modules
 
 ### 2. SSoT (单一事实来源) 检查
 
-> **📖 Authority Documents**: See `.windsurf/rules/doc-authorities.md` for project-specific mappings
+> **📖 Authority Documents**: See `.agents/rules/doc-authorities.md` for project-specific mappings
 
 #### 通用原则
 
@@ -233,7 +234,7 @@ done
 ### How to Adapt for New Projects
 
 1. Copy this file to `.windsurf/workflows/doc-review.md`
-2. Create `.windsurf/rules/review-config.md` with project-specific check commands
+2. Create `.agents/rules/review-config.md` with project-specific check commands
 3. Update `<!-- BEGIN PROJECT_SPECIFIC -->` sections
 4. Adjust check patterns based on project technology stack
 5. Add project-specific common issues
@@ -241,7 +242,7 @@ done
 ### Maintaining This Template
 
 - Keep universal review principles generic
-- Move project-specific checks to `.windsurf/rules/review-config.md`
+- Move project-specific checks to `.agents/rules/review-config.md`
 - Update based on lessons learned from documentation issues
 - Ensure compatibility with CI/CD integration
 
@@ -249,7 +250,7 @@ done
 
 <!-- BEGIN PROJECT_SPECIFIC -->
 
-**See**: `.windsurf/rules/review-config.md` for:
+**See**: `.agents/rules/review-config.md` for:
 
 - Detailed check commands with actual patterns
 - Project-specific authority documents

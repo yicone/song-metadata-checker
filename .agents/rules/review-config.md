@@ -1,10 +1,13 @@
 # Documentation Review - Project Configuration
 
-> **Project**: song-metadata-checker  
-> **Last Updated**: 2025-10-27
 > **Referenced By**: `.windsurf/workflows/doc-review.md`
 
 ## Project-Specific Check Commands
+
+<!-- 
+Instructions: Add commands to check for common inconsistencies in your project. 
+These help automate documentation reviews.
+-->
 
 ### Port Number Consistency
 
@@ -40,11 +43,10 @@ grep -r "QQ_MUSIC_API_HOST\|QQMUSIC_API_BASE\|NETEASE_API_HOST\|GEMINI_API" docs
 # - QQ_MUSIC_API_HOST=http://localhost:3001 (application layer)
 # - QQMUSIC_API_BASE=http://qqmusic-upstream:3200 (proxy layer)
 # - NETEASE_API_HOST=http://localhost:3000
-```
 
 ## Project-Specific Authority Documents
 
-Must match `.windsurf/rules/doc-authorities.md`:
+Must match `.agents/rules/doc-authorities.md`:
 
 | Type                  | Authority Document                        |
 | --------------------- | ----------------------------------------- |
@@ -55,10 +57,11 @@ Must match `.windsurf/rules/doc-authorities.md`:
 
 ## Common Issues in This Project
 
+<!-- Instructions: Document common documentation mistakes specific to this project and how to find/fix them. -->
+
 ### Issue: Port 3300 vs 3001 Confusion
 
 **Check**:
-
 ```bash
 grep -r "QQ_MUSIC_API_HOST.*3300" docs/ services/
 ```
@@ -115,6 +118,8 @@ done
 
 ## Quick Fix Commands
 
+<!-- Instructions: Provide helpful one-liner commands for fixing common documentation issues. -->
+
 ### Update Port References
 
 ```bash
@@ -157,4 +162,26 @@ jobs:
         run: |
           # Run project-specific checks
           bash .windsurf/workflows/doc-review.md
+```
+
+## Integration with CI/CD
+
+To automate these checks, you can create a workflow file.
+
+```yaml
+# .github/workflows/docs.yml (Example)
+name: Documentation Check
+
+on: [pull_request]
+
+jobs:
+  check-consistency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Doc Checks
+        run: |
+          # Add commands from the 'Project-Specific Check Commands' section here
+          echo "Running doc checks..."
+          grep -r "DATABASE_URL" docs/ src/ --exclude-dir=node_modules
 ```
