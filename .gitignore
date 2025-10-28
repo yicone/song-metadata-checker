@@ -55,12 +55,22 @@ temp/
 # Redis dump
 dump.rdb
 
-# Documentation standards backups
-.doc-standards-backup-*
-
 # Dify workflow bundled file (auto-generated)
 dify-workflow/*-bundle.yml
 
-# AI CLI and script backups
-*.md.backup
-*.sh.backup
+# Documentation standards backups
+.doc-standards-backup-*
+
+# doc-standards
+AGENTS.md
+docs/DOCUMENTATION_MANAGEMENT.md
+docs/NAMING_CONVENTIONS.md
+.markdownlint.json
+GEMINI.md
+.gemini/settings.json
+codex.md
+CLAUDE.md
+scripts/doc-agent-check.sh
+scripts/check-links.sh
+.husky/pre-commit
+scripts/setup-husky.sh
