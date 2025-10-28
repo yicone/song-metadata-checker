@@ -18,6 +18,12 @@
     "*.md": [
       "markdownlint --fix"
     ],
+    "*.json": [
+      "prettier --write"
+    ],
+    "*.yml,*.yaml": [
+      "prettier --write"
+    ],
     "*.py": [
       ".venv/bin/ruff check --fix",
       ".venv/bin/ruff format"
